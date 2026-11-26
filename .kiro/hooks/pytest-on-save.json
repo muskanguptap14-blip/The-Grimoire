@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "pytest-on-save",
+      "description": "Runs pytest whenever a Python file in src or tests is saved.",
+      "trigger": "PostFileSave",
+      "matcher": "(src|tests)[/\\\\].*\\.py$",
+      "action": {
+        "type": "command",
+        "command": "python -m pytest -q -x"
+      },
+      "timeout": 300,
+      "enabled": true
+    }
+  ]
+}

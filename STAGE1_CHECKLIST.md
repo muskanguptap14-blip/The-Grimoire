@@ -15,15 +15,15 @@ Frontend, dashboard and the `serve` command are Stage 2. The Node stretch (task 
 - [x] Task 17: autopsy: syntax, AST imports, broken imports, missing dependencies, manifests, Cause of Death, unsupported coverage (`autopsy.py`)
 
 ## Resurrection pipeline (FEAT-002)
-- [ ] Task 19: `revive` on an isolated working copy, backups, before/after reports, diff (`diffing.py`)
-- [ ] Task 20: Dockerfile text generator (`dockerfile.py`)
-- [ ] Task 21: verifier with offline venv, timeout, process-group kill (`verify.py`)
-- [ ] Task 22: offline guarantee test with sockets blocked
-- [ ] Task 23: CLI `autopsy`, `revive`, `prove` with exit codes (`cli.py`, `__main__.py`)
+- [x] Task 19: `revive` on an isolated working copy, backups, before/after reports, diff (`diffing.py`)
+- [x] Task 20: Dockerfile text generator (`dockerfile.py`)
+- [x] Task 21: verifier with offline venv, timeout, process-group kill (`verify.py`)
+- [x] Task 22: offline guarantee test with sockets blocked
+- [x] Task 23: CLI `autopsy`, `revive`, `prove` with exit codes (`cli.py`, `__main__.py`)
 
 ## Samples and completion (FEAT-003)
-- [ ] Task 18: `samples/sample-legacy-1` and `samples/sample-legacy-2` with READMEs, documented failures, expected outcomes
-- [ ] Task 24: end-to-end test, both samples STILL_DEAD before and ALIVE after, idempotent revive
-- [ ] Backup safety and error handling tests for the pipeline
-- [ ] Task 28: README: components, known limitations, exact run and test commands
-- [ ] Final architecture review and full test run
+- [x] Task 18: `samples/sample-legacy-1` and `samples/sample-legacy-2` with READMEs, documented failures, expected outcomes
+- [x] Task 24: end-to-end test, both samples STILL_DEAD before and ALIVE after, idempotent revive
+- [x] Backup safety and error handling tests for the pipeline
+- [x] Task 28: README: components, known limitations, exact run and test commands
+- [x] Final architecture review and full test run

@@ -12,7 +12,7 @@ There are no LLM calls and no network access at runtime. Dependency fixes come f
 
 ## Status
 
-Foundation only. The steering files and the `grimoire-core` spec (requirements, design, tasks) are in `.kiro/`. No application code exists yet.
+Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command are Stage 2. See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
 
 ## Scope
 

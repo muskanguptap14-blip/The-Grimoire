@@ -12,7 +12,7 @@ There are no LLM calls and no network access at runtime. Dependency fixes come f
 
 ## Status
 
-Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command are Stage 2. See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
+Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command are Stage 2 (see [docs/STAGE2.md](docs/STAGE2.md)). See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
 
 ## Scope
 
@@ -23,6 +23,16 @@ Stage 1 (backend engine, CLI and two broken sample repositories) is complete and
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Dashboard (Stage 2)
+
+```
+pip install -e '.[dev]'
+python -m grimoire serve                 # http://127.0.0.1:8765/ (hosted mode, bundled samples)
+python -m grimoire serve --mode local    # also scan a path or upload a zip
+```
+
+Open the URL, pick a sample, press Scan, then Resurrect. See [docs/STAGE2.md](docs/STAGE2.md) for screens, the API and limitations, and [docs/STAGE2_EVIDENCE.md](docs/STAGE2_EVIDENCE.md) for captured output.
 
 ## CLI (Stage 1)
 

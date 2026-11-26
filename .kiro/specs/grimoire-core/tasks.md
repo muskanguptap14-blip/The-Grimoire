@@ -107,19 +107,19 @@ Ordered smallest first. Each task is done when its acceptance criteria hold and 
   - Acceptance: for each sample, proof is `STILL_DEAD` on the original and `ALIVE` after revival. Running revive twice gives identical reports. (Req 9.2, 7.2)
   - [PBT] Report equality across repeated runs for generated small repos (one `.py` plus one `requirements.txt`).
 
-- [ ] 25. Dashboard server
+- [x] 25. Dashboard server
   - `dashboard/server.py` with routes, hosted and local modes, SSE log stream, CSP header.
   - Acceptance: in hosted mode, `{path: "/etc"}` gets 403 and unknown sample IDs get 404; local mode accepts a path; SSE delivers lines in order. (Req 8.3, 8.5, 8.6)
 
-- [ ] 26. Dashboard UI
+- [x] 26. Dashboard UI
   - `static/index.html`, `app.css`, `app.js`: dark theme, three panels, sample picker, diff coloring, log streaming, error display, `textContent` only.
   - Acceptance: page loads with no external requests (a test greps for `http://`/`https://` in static files); a manual run on both samples fills all three panels. (Req 8.1, 8.2, 8.4, 8.7)
 
-- [ ] 27. Pytest-on-save hook (file already created)
+- [ ] 27. Pytest-on-save hook (file already created) (deferred to Stage 3)
   - `.kiro/hooks/pytest-on-save.json` (trigger `PostFileSave`, matcher `(src|tests)[/\\].*\.py$`, command `python -m pytest -q -x`) and `pytest.ini` (`testpaths = tests`, `norecursedirs = samples`) exist as plain files, so samples are never collected as tests.
   - Acceptance: saving a Python file in `src/` or `tests/` triggers pytest; a failing test shows in the hook output; saving a file in `samples/` does not.
 
-- [ ] 28. README and demo script
+- [ ] 28. README and demo script (deferred to Stage 3)
   - Document install, CLI, hosted vs local mode, and the Python 3.11 / lib2to3 constraint.
   - Acceptance: following the README from a clean checkout reaches an ALIVE result on a sample.
 

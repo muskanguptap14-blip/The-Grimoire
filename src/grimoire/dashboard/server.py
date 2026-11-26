@@ -379,7 +379,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _json(self, status: int, payload: Any) -> None:
         self._send(status, json.dumps(payload).encode("utf-8"), "application/json; charset=utf-8")
@@ -454,6 +455,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         self._dispatch(self._get)
 
+    def do_HEAD(self) -> None:
+        self._dispatch(self._get)
+
     def _get(self) -> None:
         path = unquote(urlsplit(self.path).path)
         srv = self.server
@@ -493,6 +497,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Connection", "close")
         self.end_headers()
         self.close_connection = True
+        if self.command == "HEAD":
+            return
         try:
             while True:
                 with run.cond:

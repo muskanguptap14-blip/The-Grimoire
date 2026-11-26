@@ -61,6 +61,8 @@ No networking modules imported in the engine. A test monkeypatches `socket.socke
 - All repo-derived text is inserted with `textContent`, not `innerHTML`, to avoid XSS from hostile repos.
 
 ## Samples
+
+> Naming note: the samples are implemented as `samples/sample-legacy-1` (Tally Keeper, replaces crypt_calculator) and `samples/sample-legacy-2` (Lost Ledger, replaces lost_ledger) by user override. Success lines are `TALLY KEEPER ALIVE` and `LOST LEDGER ALIVE`.
 - `samples/crypt_calculator/`: Python 2 script with `print` statements, `except ValueError, e`, `raw_input` and `xrange`. Prints `CRYPT CALCULATOR ALIVE` after revival.
 - `samples/lost_ledger/`: uses `ConfigParser`, `StringIO`, `urllib2` (for parse helpers only, no network calls made), and a `requirements.txt` with a renamed package and a removed one. Prints `LOST LEDGER ALIVE` after revival; its runtime only needs the stdlib, and requirements fixing is checked by the diff.
 Both are written from scratch and kept small.

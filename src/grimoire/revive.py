@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from . import autopsy as autopsy_mod
@@ -136,33 +137,54 @@ def revive(
     prove: bool = False,
     wheelhouse: str | os.PathLike[str] | None = None,
     timeout: float = verify.DEFAULT_TIMEOUT,
+    on_event: Callable[[str, str, str], None] | None = None,
+    on_line: Callable[[str], None] | None = None,
 ) -> Report:
     """Repair a repository in an isolated copy and report before and after.
 
     Raises OutputError when ``output`` is unsafe. Everything else becomes a Finding.
+    ``on_event(stage, status, message)`` and ``on_line(line)`` are optional observers
+    (status is "start" or "done"); they never change the result.
     """
+    def emit(stage: str, status: str, message: str = "") -> None:
+        if on_event is not None:
+            on_event(stage, status, message)
+
     source = os.fspath(repo)
     out_path = _check_output(source, os.fspath(output)) if output is not None else None
 
+    emit("autopsy", "start", "diagnosing the repository")
     before = autopsy_mod.autopsy(source)
+    emit("autopsy", "done", f"{len(before.findings)} finding(s)")
     if any(f.rule_id == "INVALID_REPO" for f in before.findings):
         return before
 
     tmp = tempfile.mkdtemp(prefix="grimoire-revive-")
     try:
         work = os.path.join(tmp, "work")
+        emit("copy", "start", "copying into an isolated working copy")
         _copy_working_copy(source, work)
+        emit("copy", "done", "working copy ready")
         originals: dict[str, bytes] = {}
+        emit("repair", "start", "applying automatic repairs")
         patches, rejected = _repair(work, before.findings, originals)
+        emit("repair", "done", f"{len(patches)} file(s) patched")
+        emit("reanalyze", "start", "re-running analysis on the repaired copy")
         after = autopsy_mod.autopsy(work)
         findings = sorted_findings(list(after.findings) + rejected)
+        emit("reanalyze", "done", f"{len(findings)} finding(s) remain")
+        emit("validate", "start", "validating the repaired copy")
         validation = _validate(work, after)
+        emit("validate", "done", ", ".join(f"{n}: {s}" for n, s, _d in validation))
+        emit("dockerfile", "start", "generating Dockerfile")
         entry = dockerfile.detect_entry(work)
         has_req = os.path.isfile(os.path.join(work, "requirements.txt"))
         docker = dockerfile.generate_dockerfile(entry, has_req)
+        emit("dockerfile", "done", "Dockerfile generated (never built or run)")
 
         proof = None
         if prove:
+            emit("prove", "start", "running the repaired project offline")
             blocking = [f for f in findings if f.severity != "INFO"]
             if blocking:
                 proof = verify.ProofResult(
@@ -171,13 +193,14 @@ def revive(
                     (f"{len(blocking)} finding(s) remain after repair; project was not run",),
                 )
             else:
-                proof = verify.verify(work, entry, wheelhouse=wheelhouse, timeout=timeout)
+                proof = verify.verify(work, entry, wheelhouse=wheelhouse, timeout=timeout, on_line=on_line)
                 if proof.status == "ALIVE" and any(f.category == "UNSUPPORTED" for f in findings):
                     proof = verify.ProofResult(
                         "UNVERIFIED",
                         proof.exit_code,
                         proof.log_lines + ("the entry ran but unsupported parts of the repository were not checked",),
                     )
+            emit("prove", "done", f"proof: {proof.status}")
 
         if out_path is not None:
             _persist(work, out_path, originals, docker)

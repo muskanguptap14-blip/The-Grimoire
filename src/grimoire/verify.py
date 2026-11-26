@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from collections.abc import Callable
 from pathlib import Path
 
 from . import requirements, scan
@@ -73,7 +74,11 @@ def _kill_group(proc: subprocess.Popen) -> None:
 
 
 def _run(
-    argv: list[str], cwd: str, env: dict[str, str], timeout: float
+    argv: list[str],
+    cwd: str,
+    env: dict[str, str],
+    timeout: float,
+    on_line: Callable[[bytes], None] | None = None,
 ) -> tuple[int | None, str, bool]:
     """Run argv without a shell. Returns (exit_code, capped output, timed_out)."""
     proc = subprocess.Popen(
@@ -91,10 +96,15 @@ def _run(
     def reader() -> None:
         size = 0
         assert proc.stdout is not None
-        for block in iter(lambda: proc.stdout.read(4096), b""):
+        for block in iter(proc.stdout.readline, b""):
             if size < OUTPUT_CAP:
                 chunks.append(block[: OUTPUT_CAP - size])
             size += len(block)
+            if on_line is not None:
+                try:
+                    on_line(block)
+                except Exception:  # a broken observer must never break the run
+                    pass
 
     thread = threading.Thread(target=reader, daemon=True)
     thread.start()
@@ -123,8 +133,13 @@ def verify(
     *,
     wheelhouse: str | os.PathLike[str] | None = None,
     timeout: float = DEFAULT_TIMEOUT,
+    on_line: Callable[[str], None] | None = None,
 ) -> ProofResult:
-    """Prove that the project runs. Never raises for project problems; returns a status."""
+    """Prove that the project runs. Never raises for project problems; returns a status.
+
+    ``on_line`` (optional) receives each output line of the entry run as it is produced,
+    with temp paths scrubbed. It does not change the returned result.
+    """
     root_s = os.fspath(root)
     failures = compile_check(root_s)
     if failures:
@@ -175,7 +190,12 @@ def verify(
                     code,
                     ("dependencies could not be installed offline from the wheelhouse",) + _log_lines(out, tmp),
                 )
-        code, out, timed_out = _run([python, entry], work, env, timeout)
+        forward = None
+        if on_line is not None:
+            def forward(block: bytes) -> None:
+                on_line(_log_lines(block.decode("utf-8", errors="replace"), tmp)[0] if block.strip(b"\r\n") else "")
+
+        code, out, timed_out = _run([python, entry], work, env, timeout, forward)
         lines = _log_lines(out, tmp)
         if timed_out:
             return ProofResult("TIMED_OUT", None, lines + (f"killed after {timeout:g}s timeout",))

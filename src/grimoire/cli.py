@@ -1,7 +1,7 @@
 """Command line interface: a thin shell over the pipeline.
 
 Exit codes: 0 ALIVE (or clean), 1 STILL_DEAD/TIMED_OUT, 2 UNVERIFIED, 3 internal error.
-``serve`` (the dashboard) is Stage 2 and is not implemented.
+``serve`` starts the dashboard (3 on a configuration or bind error).
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from . import autopsy as autopsy_mod
 from . import revive as revive_mod
@@ -67,7 +68,12 @@ def _build_parser() -> argparse.ArgumentParser:
         if name == "prove":
             p.add_argument("--wheelhouse", help="directory of wheels for offline installs")
             p.add_argument("--timeout", type=float, default=verify.DEFAULT_TIMEOUT)
-    sub.add_parser("serve", help="dashboard (Stage 2, not implemented)")
+    p = sub.add_parser("serve", help="start the dashboard")
+    p.add_argument("--mode", choices=("hosted", "local"), default="hosted", help="hosted: bundled samples only; local: also paths and uploads")
+    p.add_argument("--host", default="127.0.0.1", help="bind address (local mode requires loopback)")
+    p.add_argument("--port", type=int, default=8765)
+    p.add_argument("--wheelhouse", help="directory of wheels for offline proof installs (default: repo wheelhouse/)")
+    p.add_argument("--samples-dir", help="directory of sample repositories (default: repo samples/)")
     return parser
 
 
@@ -84,8 +90,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         return EXIT_ERROR if exc.code not in (0, None) else EXIT_OK
     try:
         if args.command == "serve":
-            print("grimoire serve is part of Stage 2 and is not implemented.", file=sys.stderr)
-            return EXIT_ERROR
+            from .dashboard.server import Config, serve
+
+            return serve(
+                Config(
+                    mode=args.mode,
+                    host=args.host,
+                    port=args.port,
+                    wheelhouse=Path(args.wheelhouse) if args.wheelhouse else None,
+                    samples_dir=Path(args.samples_dir) if args.samples_dir else None,
+                )
+            )
         if args.command == "autopsy":
             report = autopsy_mod.autopsy(args.repo)
             sys.stdout.write(autopsy_mod.report_json(report) if args.json else autopsy_mod.format_report(report))

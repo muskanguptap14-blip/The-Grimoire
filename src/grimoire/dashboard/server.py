@@ -483,6 +483,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._stream(run) if m.group(2) else self._json(200, run.snapshot())
         if path.startswith("/api/"):
             raise ApiError(404, "not_found", "no such endpoint")
+        if path == "/favicon.ico":  # no icon is shipped; answer 204 so browsers log no error
+            self.send_response(204)
+            self._security_headers()
+            self.end_headers()
+            return
         name = "index.html" if path == "/" else path.lstrip("/")
         if name in STATIC_FILES and (STATIC_DIR / name).is_file():
             return self._send(200, (STATIC_DIR / name).read_bytes(), STATIC_FILES[name])

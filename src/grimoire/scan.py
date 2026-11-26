@@ -14,7 +14,7 @@ from pathlib import Path, PurePosixPath
 
 from .models import Finding, make_finding
 
-IGNORED_DIRS = frozenset({".git", "venv", ".venv", "node_modules", "__pycache__"})
+IGNORED_DIRS = frozenset({".git", "venv", ".venv", "node_modules", "__pycache__", ".grimoire-backup"})
 
 # Extension -> language. Only languages in ANALYZED_LANGUAGES have an analyzer.
 LANGUAGE_BY_EXTENSION = {

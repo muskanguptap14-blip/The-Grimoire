@@ -145,6 +145,10 @@ class Report:
     # (language, status, file_count); status is ANALYZED or UNSUPPORTED.
     coverage: tuple[tuple[str, str, int], ...] = ()
     project_types: tuple[str, ...] = ()
+    # Findings of the autopsy that ran before any repair (empty for a plain autopsy).
+    before_findings: tuple[Finding, ...] = ()
+    # (check, status, detail) rows from post-repair validation; status is PASS or FAIL.
+    validation: tuple[tuple[str, str, str], ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

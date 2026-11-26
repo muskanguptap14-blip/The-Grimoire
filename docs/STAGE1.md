@@ -53,6 +53,7 @@ Exit codes: 0 ALIVE or no remaining findings, 1 STILL_DEAD or TIMED_OUT, 2 UNVER
 - Needs Python 3.11 (`lib2to3`, removed in 3.13).
 - The verifier only supports POSIX venv layout (`bin/python`).
 - Dependencies are never downloaded. Projects with third-party requirements give UNVERIFIED without a wheelhouse.
+- The proof run is not network-isolated or sandboxed. It uses a temp copy, a temp venv, a minimal environment, a timeout and a process-group kill, but the repository's code can still reach the network and any file the user can read. `pip --no-index` only constrains pip. Run `prove` only on repositories you trust.
 - Only Python repositories are handled. Node support (spec task 29) is skipped.
 - Mapping tables are small and static; unknown packages and imports are left for manual review.
 - `readfp` in sample 2 still works on 3.11 but is removed in 3.12; Grimoire does not rewrite it.

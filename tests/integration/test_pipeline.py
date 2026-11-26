@@ -77,6 +77,32 @@ def test_missing_dependency_added_to_requirements(tmp_path):
     assert any(p.path == "requirements.txt" for p in report.patches)
 
 
+def test_existing_empty_output_dir_is_accepted(repo, tmp_path):
+    out = tmp_path / "empty"
+    out.mkdir()
+    revive.revive(repo, out)
+    assert (out / "Dockerfile.grimoire").exists()
+    assert (out / ".grimoire-backup" / "main.py").exists()
+
+
+@pytest.mark.parametrize("pre_existing", [False, True])
+def test_failed_persist_leaves_no_partial_output(repo, tmp_path, monkeypatch, pre_existing):
+    out = tmp_path / "out"
+    if pre_existing:
+        out.mkdir()
+
+    def boom(*a, **k):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(revive.Path, "write_text", boom)
+    with pytest.raises(OSError):
+        revive.revive(repo, out)
+    assert not out.exists() or list(out.iterdir()) == []
+    monkeypatch.undo()
+    revive.revive(repo, out)
+    assert (out / "Dockerfile.grimoire").exists()
+
+
 @pytest.mark.parametrize("bad", ["inside", "same", "parent", "nonempty"])
 def test_unsafe_output_refused(repo, tmp_path, bad):
     target = {

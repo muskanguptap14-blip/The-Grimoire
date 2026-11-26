@@ -107,12 +107,26 @@ def _validate(work: str, after: Report) -> tuple[tuple[str, str, str], ...]:
 
 
 def _persist(work: str, output: str, originals: dict[str, bytes], dockerfile_text: str) -> None:
-    shutil.copytree(work, output, dirs_exist_ok=False)
-    for rel in sorted(originals):
-        backup = Path(output) / BACKUP_DIR / rel
-        backup.parent.mkdir(parents=True, exist_ok=True)
-        backup.write_bytes(originals[rel])
-    (Path(output) / DOCKERFILE_NAME).write_text(dockerfile_text, encoding="utf-8")
+    # _check_output already guarantees output is absent or an empty directory.
+    existed = os.path.isdir(output)
+    try:
+        shutil.copytree(work, output, dirs_exist_ok=True)
+        for rel in sorted(originals):
+            backup = Path(output) / BACKUP_DIR / rel
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            backup.write_bytes(originals[rel])
+        (Path(output) / DOCKERFILE_NAME).write_text(dockerfile_text, encoding="utf-8")
+    except BaseException:
+        # Do not leave a partial output that would block a retry.
+        if existed:
+            for child in Path(output).iterdir():
+                if child.is_dir() and not child.is_symlink():
+                    shutil.rmtree(child, ignore_errors=True)
+                else:
+                    child.unlink(missing_ok=True)
+        else:
+            shutil.rmtree(output, ignore_errors=True)
+        raise
 
 
 def revive(

@@ -336,3 +336,17 @@ def test_workspace_removed_on_shutdown():
 def test_no_sample_names_in_server_source():
     for p in (ROOT / "src" / "grimoire" / "dashboard").glob("*.py"):
         assert "sample-legacy" not in p.read_text()
+
+
+def test_upload_file_dir_conflict_is_400(local):
+    status, body = upload(local, make_zip([("a", "x"), ("a/b.py", "y")]))
+    assert status == 400 and body["error"] == "bad_zip"
+    status, _ = upload(local, make_zip([("a/b.py", "y"), ("a", "x")]))
+    assert status == 400
+
+
+def test_origin_missing_allowed_but_null_rejected(hosted):
+    # Non-browser clients send no Origin and are allowed; browsers always send one cross-origin.
+    assert hosted.json("POST", "/api/autopsy", {"sample": NAMES[0]})[0] == 200
+    status, body = hosted.json("POST", "/api/autopsy", {"sample": NAMES[0]}, headers={"Origin": "null"})
+    assert status == 403 and body["error"] == "bad_origin"

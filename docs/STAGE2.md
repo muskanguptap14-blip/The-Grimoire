@@ -49,7 +49,7 @@ All responses are JSON unless noted. Errors are `{"error": "<code>", "detail": "
 
 Stages, in order: `autopsy`, `copy`, `repair`, `reanalyze`, `validate`, `dockerfile`, `prove` (the last is omitted when `prove` is false).
 
-The `result` object has `outcome`, `reason`, `stats`, `before` and `after` (`findings`, `counts`), `patches` (`path`, `rules`, `before`, `after`), `diff`, `dockerfile`, `validation`, `proof` (`status`, `exit_code`, `log_lines`, or null), `cause_of_death`, `coverage`, `project_types`. `stats` is `{issues_before, issues_after, automatic_fixed, manual_remaining, files_scanned, files_patched}`, computed only from the engine report. Outcome rules: SUCCESS means proof ALIVE and no non-INFO findings left. PARTIAL means repairs applied but the proof was UNVERIFIED or not requested, or findings remain. FAILURE means STILL_DEAD, TIMED_OUT, an invalid repository or an internal error.
+The `result` object has `outcome`, `reason`, `stats`, `before` and `after` (`findings`, `counts`), `patches` (`path`, `rules`, `before`, `after`), `diff`, `dockerfile`, `validation`, `proof` (`status`, `exit_code`, `log_lines`, or null), `cause_of_death`, `coverage`, `project_types`. `stats` is `{issues_before, issues_after, automatic_fixed, manual_remaining, files_scanned, files_patched}`, computed only from the engine report. `automatic_fixed` is the number of AUTOMATIC-class findings before repair minus the number still present after repair (never below 0), so it is a before/after difference and not a count of individual edits. Outcome rules: SUCCESS means proof ALIVE and no non-INFO findings left. PARTIAL means repairs applied but the proof was UNVERIFIED or not requested, or findings remain. FAILURE means STILL_DEAD, TIMED_OUT, an invalid repository or an internal error.
 
 Error codes:
 
@@ -94,7 +94,7 @@ Sample 2 declares `beautifulsoup4`, which needs wheels to install without networ
 
 - Hosted mode accepts bundled sample ids only. Unknown ids get 404, paths and uploads get 403.
 - Local mode refuses non-loopback `--host`.
-- The Host header is validated (DNS rebinding) and POSTs with a cross-origin `Origin` are rejected. POST needs `Content-Type: application/json` (or `application/zip` for upload). JSON bodies are capped at 64 KB.
+- The Host header is validated (DNS rebinding) and POSTs with a cross-origin `Origin` (including `null`) are rejected. A POST with no `Origin` header is accepted so that curl, the CLI and test clients work; browsers always send `Origin` on cross-origin POSTs, so this does not open a browser CSRF path. POST needs `Content-Type: application/json` (or `application/zip` for upload). JSON bodies are capped at 64 KB.
 - Static serving uses a file-name allowlist, so path traversal returns 404.
 - The 50 most recent runs are kept. Uploads live in a per-server temp directory removed on shutdown. Samples are never written (runs use a temp copy).
 - Tracebacks go to the server's stderr, never to clients.
@@ -114,8 +114,9 @@ Results in the browser match the backend: see `docs/STAGE2_EVIDENCE.md`, where t
 
 ## Tests
 
-- `../.venv/bin/python -m pytest -q`: 204 passed (147 from Stage 1, 6 wheelhouse, 33 server, 15 static, 3 end to end).
+- `../.venv/bin/python -m pytest -q`: 207 passed (204 earlier, plus 3 regression tests for the Origin check, the bounded output read and the offline check).
 - `node --test tests/frontend/`: 19 passed.
+- Dev server check: `python -m grimoire serve` (no port flag) printed `Grimoire dashboard (hosted mode): http://127.0.0.1:8765/`. `GET /api/health` returned 200 `{"status": "ok", "mode": "hosted", "version": "0.1.0", "wheelhouse": {"in_use": true, "wheels": 4}}`. `GET /api/samples` listed `sample-legacy-1` and `sample-legacy-2`.
 
 ## Remaining limitations
 

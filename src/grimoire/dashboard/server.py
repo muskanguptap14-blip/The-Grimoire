@@ -142,14 +142,17 @@ def safe_extract(data: bytes, dest: Path) -> int:
             raise ApiError(400, "unsafe_path", "the archive contains an unsafe path")
         targets.append((info, target))
     count = 0
-    for info, target in targets:
-        if info.is_dir():
-            target.mkdir(parents=True, exist_ok=True)
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with zf.open(info) as src, open(target, "wb") as out:
-            out.write(src.read(UPLOAD_CAP + 1))
-        count += 1
+    try:
+        for info, target in targets:
+            if info.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with zf.open(info) as src, open(target, "wb") as out:
+                out.write(src.read(UPLOAD_CAP + 1))
+            count += 1
+    except OSError:  # e.g. a path used as both a file and a directory
+        raise ApiError(400, "bad_zip", "the archive has conflicting file and directory paths") from None
     return count
 
 

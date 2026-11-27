@@ -21,6 +21,7 @@ from . import requirements, scan
 from .models import ProofResult
 
 OUTPUT_CAP = 1024 * 1024  # 1 MiB of captured output
+READ_CHUNK = 64 * 1024  # max bytes read from the child per call
 DEFAULT_TIMEOUT = 30.0
 SETUP_TIMEOUT = 300.0
 
@@ -96,7 +97,8 @@ def _run(
     def reader() -> None:
         size = 0
         assert proc.stdout is not None
-        for block in iter(proc.stdout.readline, b""):
+        # Bounded read: one unbounded line must not be held in memory before the cap applies.
+        for block in iter(lambda: proc.stdout.readline(READ_CHUNK), b""):
             if size < OUTPUT_CAP:
                 chunks.append(block[: OUTPUT_CAP - size])
             size += len(block)

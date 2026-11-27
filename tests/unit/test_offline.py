@@ -11,3 +11,17 @@ def test_engine_has_no_network_imports():
     engine = [p for p in src.rglob("*.py") if "dashboard" not in p.relative_to(src).parts]
     offenders = [str(p) for p in engine if FORBIDDEN.search(p.read_text())]
     assert offenders == []
+
+
+def test_verify_run_bounds_single_long_line(tmp_path):
+    import sys
+
+    from grimoire import verify as v
+
+    n = v.OUTPUT_CAP * 3
+    seen = []
+    code = f"import sys; sys.stdout.write('x' * {n}); sys.stdout.flush()"
+    rc, out, timed_out = v._run([sys.executable, "-c", code], str(tmp_path), {}, 30, seen.append)
+    assert rc == 0 and not timed_out
+    assert len(out) == v.OUTPUT_CAP
+    assert max(len(b) for b in seen) <= v.READ_CHUNK

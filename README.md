@@ -8,7 +8,7 @@ It takes a dead repository and does three things:
 2. **Ritual.** Applies rule-based fixes and produces a Resurrection Diff and a generated Dockerfile (text only, never built).
 3. **Proof of Life.** Runs the revived project in a subprocess inside a temp venv with a timeout and streams the logs.
 
-There are no LLM calls and no network access at runtime. Dependency fixes come from built-in mapping tables.
+There are no LLM calls, and the engine makes no network calls. Only `prove` runs the repaired project, in a temporary virtualenv that installs from a local wheelhouse with `pip --no-index` (no network). Dependency fixes come from built-in mapping tables.
 
 ## Status
 

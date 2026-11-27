@@ -1,0 +1,4 @@
+beautifulsoup
+distribute>=0.6
+ordereddict==1.1
+beautifulsoup4

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Grimoire | Legacy code resurrection</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar" role="banner">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">G</span>
+    <span class="brand-name">Grimoire</span>
+    <span class="brand-sub">Legacy code resurrection</span>
+  </div>
+  <nav class="topnav" aria-label="Sections">
+    <a href="#repository">Repository</a>
+    <a href="#autopsy">Autopsy</a>
+    <a href="#findings">Findings</a>
+    <a href="#plan">Plan</a>
+    <a href="#progress">Progress</a>
+    <a href="#results">Results</a>
+    <a href="#detail">Repairs</a>
+  </nav>
+  <div class="status-cluster">
+    <span id="mode-badge" class="badge badge-mode">mode: unknown</span>
+    <span class="health"><span id="health-dot" class="dot dot-unknown" aria-hidden="true"></span><span id="health-text">Connecting</span></span>
+  </div>
+</header>
+
+<div id="error-banner" class="error-banner" role="alert" hidden>
+  <span class="error-icon" aria-hidden="true">!</span>
+  <span id="error-text" class="error-text"></span>
+  <button id="error-retry" type="button" class="btn btn-small">Retry</button>
+  <button id="error-dismiss" type="button" class="btn btn-small btn-ghost">Dismiss</button>
+</div>
+
+<main id="main" class="layout">
+
+  <section id="repository" class="panel" aria-labelledby="h-repository">
+    <div class="panel-head">
+      <h2 id="h-repository">Repository</h2>
+      <span id="selected-source" class="muted">No repository selected</span>
+    </div>
+    <div class="panel-body">
+      <h3 class="sub-h">Bundled samples</h3>
+      <div id="sample-list" class="sample-grid" role="radiogroup" aria-label="Bundled samples"></div>
+
+      <h3 class="sub-h">Your own code</h3>
+      <p id="hosted-note" class="note" hidden>Hosted mode only runs the bundled samples. Start the dashboard with <code>grimoire serve --mode local</code> to scan a path or upload a zip.</p>
+      <div class="source-grid">
+        <div class="source-box">
+          <label for="path-input" class="label">Directory path</label>
+          <div class="row">
+            <input id="path-input" class="input" type="text" spellcheck="false" autocomplete="off" placeholder="/path/to/legacy-project">
+            <button id="path-btn" type="button" class="btn">Use path</button>
+          </div>
+          <p id="path-msg" class="field-msg" role="status"></p>
+        </div>
+        <div class="source-box">
+          <span class="label" id="zip-label">Zip upload (max 50 MB)</span>
+          <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-labelledby="zip-label drop-hint">
+            <span id="drop-hint">Drop a .zip here or press Enter to browse</span>
+          </div>
+          <input id="zip-input" class="visually-hidden" type="file" accept=".zip,application/zip" tabindex="-1" aria-labelledby="zip-label">
+          <p id="zip-msg" class="field-msg" role="status"></p>
+        </div>
+      </div>
+      <div class="row actions">
+        <button id="scan-btn" type="button" class="btn btn-primary" disabled>Scan repository</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="autopsy" class="panel" aria-labelledby="h-autopsy">
+    <div class="panel-head"><h2 id="h-autopsy">Autopsy overview</h2><span id="autopsy-status" class="muted" role="status"></span></div>
+    <div class="panel-body">
+      <p id="autopsy-empty" class="empty">Select a repository and scan it to see the autopsy.</p>
+      <div id="autopsy-body" hidden>
+        <div id="tiles" class="tiles"></div>
+        <div class="grid-3">
+          <div class="card">
+            <h3 class="sub-h">Severity breakdown</h3>
+            <div id="sev-chart"></div>
+          </div>
+          <div class="card">
+            <h3 class="sub-h">Cause of death</h3>
+            <div id="cause-list"></div>
+          </div>
+          <div class="card">
+            <h3 class="sub-h">Language coverage</h3>
+            <div id="coverage-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="findings" class="panel" aria-labelledby="h-findings">
+    <div class="panel-head"><h2 id="h-findings">Detected issues</h2><span id="findings-count" class="muted"></span></div>
+    <div class="panel-body">
+      <div class="filters">
+        <label class="filter"><span class="label">Severity</span>
+          <select id="filter-severity" class="input"><option value="all">All</option></select></label>
+        <label class="filter"><span class="label">Category</span>
+          <select id="filter-category" class="input"><option value="all">All</option></select></label>
+        <label class="filter"><span class="label">Repair class</span>
+          <select id="filter-class" class="input"><option value="all">All</option><option value="AUTOMATIC">Automatic</option><option value="MANUAL">Manual</option></select></label>
+        <label class="filter filter-grow"><span class="label">Search</span>
+          <input id="filter-query" class="input" type="search" placeholder="rule, file or reason" autocomplete="off"></label>
+        <button id="filter-reset" type="button" class="btn btn-ghost">Reset</button>
+      </div>
+      <div class="table-wrap">
+        <table id="findings-table" class="table">
+          <caption class="visually-hidden">Findings from the autopsy</caption>
+          <thead>
+            <tr>
+              <th scope="col" aria-sort="none"><button id="sort-severity" type="button" class="sort" data-sort="severity">Severity</button></th>
+              <th scope="col" aria-sort="none"><button id="sort-rule" type="button" class="sort" data-sort="rule_id">Rule</button></th>
+              <th scope="col" aria-sort="none"><button id="sort-file" type="button" class="sort" data-sort="file">Location</button></th>
+              <th scope="col" aria-sort="none"><button id="sort-reason" type="button" class="sort" data-sort="reason">Reason</button></th>
+              <th scope="col" aria-sort="none"><button id="sort-class" type="button" class="sort" data-sort="repair_class">Repair</button></th>
+            </tr>
+          </thead>
+          <tbody id="findings-body"></tbody>
+        </table>
+      </div>
+      <p id="findings-empty" class="empty" hidden></p>
+    </div>
+  </section>
+
+  <section id="plan" class="panel" aria-labelledby="h-plan">
+    <div class="panel-head"><h2 id="h-plan">Recovery plan</h2></div>
+    <div class="panel-body">
+      <ol id="pipeline" class="pipeline" aria-label="Pipeline stages"></ol>
+      <p id="plan-empty" class="empty">Scan a repository to see what Grimoire would do.</p>
+      <div id="plan-list" class="plan-list"></div>
+      <div class="resurrect">
+        <label class="check"><input id="prove-check" type="checkbox" checked> <span>Include proof run</span></label>
+        <p id="caution" class="note">The proof step builds a virtual environment and runs the repaired project's entry point. In local mode that executes the repository's code without a sandbox, so use it on code you trust.</p>
+        <button id="resurrect-btn" type="button" class="btn btn-primary btn-large" disabled>Resurrect</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="progress" class="panel" aria-labelledby="h-progress">
+    <div class="panel-head"><h2 id="h-progress">Live progress</h2><span id="progress-status" class="muted" role="status" aria-live="polite">Idle</span></div>
+    <div class="panel-body">
+      <ol id="stage-timeline" class="timeline" aria-label="Stage timeline"></ol>
+      <div class="console-bar">
+        <label class="check"><input id="autoscroll-check" type="checkbox" checked> <span>Auto-scroll</span></label>
+        <button id="copy-log-btn" type="button" class="btn btn-small">Copy log</button>
+        <span id="copy-msg" class="muted" role="status"></span>
+      </div>
+      <div id="log-console" class="console" role="log" aria-label="Run log" tabindex="0"></div>
+    </div>
+  </section>
+
+  <section id="results" class="panel" aria-labelledby="h-results">
+    <div class="panel-head"><h2 id="h-results">Results</h2></div>
+    <div class="panel-body">
+      <p id="results-empty" class="empty">Run a resurrection to see before and after statistics.</p>
+      <div id="results-body" hidden>
+        <div id="outcome-banner" class="outcome" role="status" aria-live="assertive">
+          <span id="outcome-icon" class="outcome-icon" aria-hidden="true"></span>
+          <div><div id="outcome-label" class="outcome-label"></div><div id="outcome-reason" class="outcome-reason"></div></div>
+        </div>
+        <div id="stat-tiles" class="tiles"></div>
+        <h3 class="sub-h">Before and after</h3>
+        <div id="compare-bars" class="compare"></div>
+        <h3 class="sub-h">Patched files</h3>
+        <ul id="patched-list" class="file-list"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="detail" class="panel" aria-labelledby="h-detail">
+    <div class="panel-head">
+      <h2 id="h-detail">Repair details</h2>
+      <button id="download-btn" type="button" class="btn btn-small" disabled>Download JSON report</button>
+    </div>
+    <div class="panel-body">
+      <div class="tabs" role="tablist" aria-label="Repair detail views">
+        <button id="tab-diff" type="button" role="tab" class="tab" data-tab="diff" aria-selected="true" aria-controls="panel-diff">Diff</button>
+        <button id="tab-dockerfile" type="button" role="tab" class="tab" data-tab="dockerfile" aria-selected="false" aria-controls="panel-dockerfile" tabindex="-1">Dockerfile</button>
+        <button id="tab-validation" type="button" role="tab" class="tab" data-tab="validation" aria-selected="false" aria-controls="panel-validation" tabindex="-1">Validation</button>
+        <button id="tab-proof" type="button" role="tab" class="tab" data-tab="proof" aria-selected="false" aria-controls="panel-proof" tabindex="-1">Proof log</button>
+      </div>
+      <div id="panel-diff" class="tabpanel" role="tabpanel" aria-labelledby="tab-diff">
+        <div class="row diff-bar">
+          <span id="detail-file" class="mono muted">No file selected</span>
+          <div class="seg" role="group" aria-label="File view">
+            <button id="view-diff" type="button" class="seg-btn" data-view="diff" aria-pressed="true">Diff</button>
+            <button id="view-before" type="button" class="seg-btn" data-view="before" aria-pressed="false">Before</button>
+            <button id="view-after" type="button" class="seg-btn" data-view="after" aria-pressed="false">After</button>
+          </div>
+        </div>
+        <p id="detail-rules" class="muted"></p>
+        <div id="diff-view" class="code" tabindex="0" role="region" aria-label="File content"></div>
+      </div>
+      <div id="panel-dockerfile" class="tabpanel" role="tabpanel" aria-labelledby="tab-dockerfile" hidden>
+        <pre id="dockerfile-view" class="code" tabindex="0"></pre>
+      </div>
+      <div id="panel-validation" class="tabpanel" role="tabpanel" aria-labelledby="tab-validation" hidden>
+        <div id="validation-view"></div>
+      </div>
+      <div id="panel-proof" class="tabpanel" role="tabpanel" aria-labelledby="tab-proof" hidden>
+        <p id="proof-summary" class="muted"></p>
+        <pre id="proof-view" class="code" tabindex="0"></pre>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">Grimoire dashboard. Every figure comes from the local Grimoire engine.</footer>
+
+<script src="/lib.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -12,7 +12,7 @@ There are no LLM calls, and the engine makes no network calls. Only `prove` runs
 
 ## Status
 
-Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command are Stage 2 (see [docs/STAGE2.md](docs/STAGE2.md)). See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
+Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command (Stage 2) are implemented (see [docs/STAGE2.md](docs/STAGE2.md)). See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
 
 ## Scope
 
@@ -24,12 +24,34 @@ Stage 1 (backend engine, CLI and two broken sample repositories) is complete and
 
 MIT. See [LICENSE](LICENSE).
 
+## Setup
+
+Grimoire requires Python 3.11. The engine parses Python 2 code with the standard library's `lib2to3`, which is removed in Python 3.13 and deprecated in 3.12.
+
+```
+python3.11 -m venv .venv
+. .venv/bin/activate
+pip install -e '.[dev]'        # needs network once, for pytest and hypothesis
+python -m pytest -q            # backend tests
+node --test tests/frontend/    # frontend tests (needs Node.js)
+```
+
+`pip install -e .` alone installs Grimoire with no dependencies. Run the commands below from the repository root so the relative paths (`samples/`, `wheelhouse`) resolve.
+
+Quick check that reaches ALIVE on both samples:
+
+```
+python -m grimoire prove samples/sample-legacy-1
+python -m grimoire prove samples/sample-legacy-2 --wheelhouse wheelhouse
+```
+
+Without `--wheelhouse`, sample 2 reports `UNVERIFIED` (exit 2) because its dependencies cannot be installed offline.
+
 ## Dashboard (Stage 2)
 
 ```
-pip install -e '.[dev]'
-python -m grimoire serve                 # http://127.0.0.1:8765/ (hosted mode, bundled samples)
-python -m grimoire serve --mode local    # also scan a path or upload a zip
+python -m grimoire serve                 # http://127.0.0.1:8765/ (hosted mode: only the bundled samples/)
+python -m grimoire serve --mode local    # local mode: also scan a local path or upload a zip
 ```
 
 Open the URL, pick a sample, press Scan, then Resurrect. See [docs/STAGE2.md](docs/STAGE2.md) for screens, the API and limitations, and [docs/STAGE2_EVIDENCE.md](docs/STAGE2_EVIDENCE.md) for captured output.
@@ -46,4 +68,4 @@ python -m grimoire prove PATH [--output DIR] [--wheelhouse DIR] [--timeout SECON
 
 Exit codes: 0 ALIVE (or no remaining findings), 1 STILL_DEAD or TIMED_OUT, 2 UNVERIFIED, 3 internal or usage error.
 
-`serve` (the dashboard) is Stage 2 and is not implemented; the command exits with code 3.
+`serve` starts the dashboard (see above). It uses the bundled `wheelhouse/` for proof runs.

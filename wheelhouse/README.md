@@ -18,3 +18,5 @@ Grimoire never downloads anything at runtime. Use the wheelhouse with:
 To refresh (needs network, run by a maintainer, not by Grimoire):
 
     pip download --no-deps -d wheelhouse six beautifulsoup4 soupsieve typing_extensions
+
+Integrity: `SHA256SUMS` lists the SHA-256 of each wheel (these match the digests PyPI publishes for these versions). Verify with `cd wheelhouse && sha256sum -c SHA256SUMS`; `tests/unit/test_repo_config.py` also checks it. After refreshing wheels, regenerate with `sha256sum *.whl > SHA256SUMS`.

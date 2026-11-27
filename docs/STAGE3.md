@@ -1,6 +1,6 @@
 # Stage 3: Verification and cleanup
 
-Stage 3 adds no features. It records browser verification of the dashboard on both samples, final cleanup, and known limitations. Spec tasks 27 (pytest-on-save hook) and 28 (README and demo script) remain unticked.
+Stage 3 adds no features. It records browser verification of the dashboard on both samples, final cleanup, and known limitations. Follow-up work after the browser check (README verification, wheel checksums, spec tasks 27 and 28) is recorded under "Follow-up" below.
 
 ## Browser verification
 
@@ -26,7 +26,29 @@ CLI cross-check: `grimoire prove samples/sample-legacy-N` reproduced the same di
 
 ## Known limitations
 
-- The bundled wheels have no checksum file, so wheel integrity is not verified.
+- Spec task 27 stays unticked: the hook file and `pytest.ini` are verified by tests, but saving a file in an IDE to trigger the hook was not observed.
 - `app.js` is checked by static tests and a few Node tests only, not by an automated browser suite.
 - The offline-import test skips the dashboard.
 - Origin policy: state-changing requests with a cross-origin or `null` Origin are rejected. Requests with no Origin header are allowed so the CLI and curl keep working.
+
+## Follow-up
+
+### README verification
+
+Done in a fresh Python 3.11.15 venv outside the repo, then again from a clean `git clone` of branch `stage2/dashboard` with its own new venv.
+
+- `pip install -e '.[dev]'` succeeded (network needed once, for pytest and hypothesis).
+- `python -m grimoire serve` returned 200 on `/` and `{"status": "ok", "mode": "hosted", "version": "0.1.0", "wheelhouse": {"in_use": true, "wheels": 4}}` on `/api/health`. `serve --mode local` was not run in this pass.
+- `prove samples/sample-legacy-1` gave ALIVE (exit 0). `prove samples/sample-legacy-2 --wheelhouse wheelhouse` gave ALIVE (exit 0). Without `--wheelhouse` it gave UNVERIFIED (exit 2).
+- Clean clone: pytest 210 passed. In the original tree: pytest 210 passed, node 19 passed. Baseline before this work was 207 passed.
+
+README inaccuracies fixed: it still said `serve` was not implemented and exited 3; it had no venv, test or Python 3.11 / `lib2to3` setup steps; it did not say sample 2 needs `--wheelhouse` to reach ALIVE.
+
+### Wheel checksums
+
+`wheelhouse/SHA256SUMS` holds SHA-256 for the four wheels. They match the digests PyPI reports for those versions. `sha256sum -c` passes, and `tests/unit/test_repo_config.py` checks the file against the wheels.
+
+### Spec tasks
+
+- Task 28 (README): ticked. Install, CLI, hosted vs local mode and the Python 3.11 / `lib2to3` constraint are documented, and following the README from a clean clone reached ALIVE on both samples.
+- Task 27 (pytest-on-save): left unticked. Verified by tests: `.kiro/hooks/pytest-on-save.json` has trigger `PostFileSave`, the required matcher and command, the matcher matches `src/` and `tests/` Python files and not `samples/`, and `pytest.ini` has `testpaths = tests` with `samples` in `norecursedirs`. Not verified: that saving a file in the IDE actually runs pytest and shows failures in the hook output. That needs the Kiro IDE.

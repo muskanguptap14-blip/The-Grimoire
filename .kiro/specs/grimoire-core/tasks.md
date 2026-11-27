@@ -119,7 +119,7 @@ Ordered smallest first. Each task is done when its acceptance criteria hold and 
   - `.kiro/hooks/pytest-on-save.json` (trigger `PostFileSave`, matcher `(src|tests)[/\\].*\.py$`, command `python -m pytest -q -x`) and `pytest.ini` (`testpaths = tests`, `norecursedirs = samples`) exist as plain files, so samples are never collected as tests.
   - Acceptance: saving a Python file in `src/` or `tests/` triggers pytest; a failing test shows in the hook output; saving a file in `samples/` does not.
 
-- [ ] 28. README and demo script (deferred to Stage 3)
+- [x] 28. README and demo script
   - Document install, CLI, hosted vs local mode, and the Python 3.11 / lib2to3 constraint.
   - Acceptance: following the README from a clean checkout reaches an ALIVE result on a sample.
 

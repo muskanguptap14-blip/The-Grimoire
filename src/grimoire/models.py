@@ -154,6 +154,8 @@ class Report:
     before_findings: tuple[Finding, ...] = ()
     # (check, status, detail) rows from post-repair validation; status is PASS or FAIL.
     validation: tuple[tuple[str, str, str], ...] = ()
+    # .dockerignore text, generated only together with the Node Dockerfile.
+    dockerignore: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

@@ -96,3 +96,8 @@ def generate_node_dockerfile(main: str) -> str:
         "CMD [\"node\", %s]" % json.dumps(main),
     ]
     return "\n".join(lines) + "\n"
+
+
+def generate_node_dockerignore() -> str:
+    """Keeps a local node_modules and .git out of the image build context."""
+    return "node_modules\n.git\n"

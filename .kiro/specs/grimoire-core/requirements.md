@@ -50,6 +50,7 @@ Requirements use EARS patterns: Ubiquitous (The system shall), Event-driven (WHE
 5. IF a Dockerfile already exists, THEN THE Grimoire SHALL write the generated one as `Dockerfile.grimoire` in the Working Copy.
 6. WHERE Node support is enabled and the Working Copy is Node-only (a root `package.json` and no Python source files), THE Grimoire SHALL instead generate a Dockerfile as text based on `node:22-slim`, with exactly these lines in order: `FROM node:22-slim`, `WORKDIR /app`, `COPY package*.json ./`, `RUN npm install --omit=dev`, `COPY . .` and `CMD ["node", "<main>"]`, where `<main>` is the `main` field of `package.json`, or `index.js` when it is missing or unsafe. Requirement 5.3 applies to every other project, with byte-identical output.
 7. THE Grimoire SHALL NOT build or run the Node Dockerfile, and SHALL NOT invoke `npm` or `docker` (Req 5.4, Req 10.4).
+8. WHEN THE Grimoire generates the Node Dockerfile, IT SHALL also generate `.dockerignore` as text with the lines `node_modules` and `.git`, so that a local `node_modules` cannot overwrite the one installed by `npm install`. With `--output`, it is written next to `Dockerfile.grimoire`. No `.dockerignore` is generated for any other project.
 
 ## Requirement 6: Proof of Life
 1. WHEN verification starts, THE Grimoire SHALL create a venv in a temp directory and run the entry point in a subprocess without a shell.

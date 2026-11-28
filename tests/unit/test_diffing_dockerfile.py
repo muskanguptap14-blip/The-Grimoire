@@ -98,3 +98,25 @@ def test_revive_python_sample_golden():
     report = revive.revive(REPO_ROOT / "samples" / "sample-legacy-1", node=True)
     assert report.dockerfile == revive.revive(REPO_ROOT / "samples" / "sample-legacy-1").dockerfile
     assert report.dockerfile.startswith("FROM python:3.11-slim\n")
+
+
+def test_golden_node_dockerignore(tmp_path):
+    from grimoire import revive
+    from grimoire.dockerfile import generate_node_dockerignore
+
+    assert generate_node_dockerignore() == _golden("node.dockerignore")
+    report = revive.revive(REPO_ROOT / "samples" / "sample-legacy-3", node=True)
+    assert report.dockerignore == _golden("node.dockerignore")
+    out = tmp_path / "out"
+    revive.revive(REPO_ROOT / "samples" / "sample-legacy-3", node=True, output=out)
+    assert (out / ".dockerignore").read_text(encoding="utf-8") == _golden("node.dockerignore")
+    assert (out / "Dockerfile.grimoire").read_text(encoding="utf-8") == _golden("node-default.Dockerfile")
+
+
+def test_no_dockerignore_for_python(tmp_path):
+    from grimoire import revive
+
+    out = tmp_path / "out"
+    report = revive.revive(REPO_ROOT / "samples" / "sample-legacy-1", node=True, output=out)
+    assert report.dockerignore == ""
+    assert not (out / ".dockerignore").exists()

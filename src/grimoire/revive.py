@@ -19,6 +19,7 @@ from .models import FilePatch, Finding, Report, make_finding, sorted_findings
 
 BACKUP_DIR = ".grimoire-backup"
 DOCKERFILE_NAME = "Dockerfile.grimoire"
+DOCKERIGNORE_NAME = ".dockerignore"
 _MISSING_DIST = re.compile(r"but (?P<dist>\S+) is not declared")
 
 
@@ -135,7 +136,9 @@ def _validate(work: str, after: Report, node: bool = False) -> tuple[tuple[str, 
     return tuple(rows)
 
 
-def _persist(work: str, output: str, originals: dict[str, bytes], dockerfile_text: str) -> None:
+def _persist(
+    work: str, output: str, originals: dict[str, bytes], dockerfile_text: str, dockerignore_text: str = ""
+) -> None:
     # _check_output already guarantees output is absent or an empty directory.
     existed = os.path.isdir(output)
     try:
@@ -145,6 +148,8 @@ def _persist(work: str, output: str, originals: dict[str, bytes], dockerfile_tex
             backup.parent.mkdir(parents=True, exist_ok=True)
             backup.write_bytes(originals[rel])
         (Path(output) / DOCKERFILE_NAME).write_text(dockerfile_text, encoding="utf-8")
+        if dockerignore_text:
+            (Path(output) / DOCKERIGNORE_NAME).write_text(dockerignore_text, encoding="utf-8")
     except BaseException:
         # Do not leave a partial output that would block a retry.
         if existed:
@@ -209,8 +214,10 @@ def revive(
         emit("dockerfile", "start", "generating Dockerfile")
         entry = dockerfile.detect_entry(work)
         has_req = os.path.isfile(os.path.join(work, "requirements.txt"))
+        dockerignore = ""
         if node and dockerfile.is_node_only(work):
             docker = dockerfile.generate_node_dockerfile(dockerfile.detect_node_main(work))
+            dockerignore = dockerfile.generate_node_dockerignore()
         else:
             docker = dockerfile.generate_dockerfile(entry, has_req)
         emit("dockerfile", "done", "Dockerfile generated (never built or run)")
@@ -236,7 +243,7 @@ def revive(
             emit("prove", "done", f"proof: {proof.status}")
 
         if out_path is not None:
-            _persist(work, out_path, originals, docker)
+            _persist(work, out_path, originals, docker, dockerignore)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -252,4 +259,5 @@ def revive(
         project_types=after.project_types,
         before_findings=before.findings,
         validation=validation,
+        dockerignore=dockerignore,
     )

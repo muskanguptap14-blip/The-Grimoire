@@ -28,6 +28,24 @@ This only shows the matcher selects the right paths. Task 27 stays `[ ]` until s
 - The diff panel already renders any patched file by path, so the `package.json` diff appears there with no extra code. It is covered by a test on the run result and a `splitDiffByFile` test.
 - All new DOM text uses `textContent`; no external assets; the CSP header is unchanged.
 
+## Node Dockerfile
+
+- Applies only when Node support is on (`revive(node=True)`, the dashboard toggle) and the Working Copy is Node-only: a root `package.json` and no `.py` files. Everything else (Python-only, mixed, or Node support off) keeps the existing Python Dockerfile text, byte for byte.
+- Output, as text only (never built, no `npm` or `docker` call):
+
+```
+FROM node:22-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY . .
+CMD ["node", "<main>"]
+```
+
+- `<main>` is the `main` field of the repaired `package.json`. It falls back to `index.js` when the file is unreadable, `main` is missing, not a string, empty, absolute, or contains `..`. A leading `./` is dropped. The file named by `main` is not checked for existence.
+- Code: `is_node_only`, `detect_node_main`, `generate_node_dockerfile` in `src/grimoire/dockerfile.py`; the choice is made in `revive.py`. Requirements: Req 5.6 and 5.7.
+- Golden files: `tests/golden/dockerfile/`. Tests are in `tests/unit/test_diffing_dockerfile.py`.
+
 ## Verification
 
 - `python -m pytest -q`: 307 passed (299 before, 8 new: node flag, bad flag value, node run and diff, no-flag run, hosted allowlist with the flag, sample listing, sample source, static wiring).
@@ -38,3 +56,5 @@ This only shows the matcher selects the right paths. Task 27 stays `[ ]` until s
 
 - The outcome for `sample-legacy-3` is PARTIAL, not SUCCESS: there is no Python entry point, so proof is UNVERIFIED ("no entry point found; nothing was run"). Grimoire never runs Node or npm (Req 10.4), so `EMBER LEDGER ALIVE` is not proven by the engine.
 - The sample card says "0 Python files" for this sample.
+
+After the Node Dockerfile step: `python -m pytest -q` 314 passed (7 new Dockerfile tests); `node --test tests/frontend/` 21 passed.

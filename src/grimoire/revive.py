@@ -209,7 +209,10 @@ def revive(
         emit("dockerfile", "start", "generating Dockerfile")
         entry = dockerfile.detect_entry(work)
         has_req = os.path.isfile(os.path.join(work, "requirements.txt"))
-        docker = dockerfile.generate_dockerfile(entry, has_req)
+        if node and dockerfile.is_node_only(work):
+            docker = dockerfile.generate_node_dockerfile(dockerfile.detect_node_main(work))
+        else:
+            docker = dockerfile.generate_dockerfile(entry, has_req)
         emit("dockerfile", "done", "Dockerfile generated (never built or run)")
 
         proof = None

@@ -127,3 +127,7 @@ Ordered smallest first. Each task is done when its acceptance criteria hold and 
   - `nodejs.py` and `data/node_map.json`; a small `package.json` sample fixture under `tests/fixtures/`.
   - Acceptance: deprecated packages replaced, key order preserved, no JS files touched, no npm calls. (Req 10)
   - [PBT] Idempotent; output is valid JSON; key order of untouched keys preserved.
+
+- [x] 30. Node-aware Dockerfile
+  - `dockerfile.py`: `is_node_only`, `detect_node_main`, `generate_node_dockerfile` (`FROM node:22-slim`, `COPY package*.json ./`, `RUN npm install --omit=dev`, `CMD ["node", "<main>"]`); `revive.py` uses it when Node support is on and the project is Node-only.
+  - Acceptance: golden files under `tests/golden/dockerfile/`; Python-only and mixed output unchanged; nothing is built or run. (Req 5.6, 5.7)

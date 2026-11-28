@@ -50,7 +50,7 @@ Run on Python 3.11 in a fresh venv with `pip install -e '.[dev]'` (pytest 9.2.0,
 
 - `node_map.json` replacement ranges (`pug ^3.0.2`, `uuid ^9.0.1`, `coffeescript ^2.7.0`, `lodash ^4.17.21`, `fsevents ^2.3.2`) and the deprecation list are from maintainer knowledge, not checked against the registry, because the engine cannot go online. The table is small on purpose; extend it with the same shape.
 - The `engines.node` floor of 18 is a table value (`engines_node.below`). Node 18 is itself end-of-life, so raise it if you want a stricter floor.
-- A pure Node project still gets the Python Dockerfile text and `UNVERIFIED` proof ("no entry point found"). Node Dockerfiles and `npm`-based proof are out of scope (no npm, Req 10.4).
+- A pure Node project still gets `UNVERIFIED` proof ("no entry point found"). With Node support on it now gets a Node Dockerfile (see Stage 5); `npm`-based proof is out of scope (no npm, Req 10.4).
 - A remaining `NODE_DEPRECATED_PACKAGE` warning counts as an unresolved finding, so in a mixed Python + Node repo proof reports `STILL_DEAD` without running the project (same rule as `UNKNOWN_IMPORT`).
 - Stage 5 added the dashboard "Node support" toggle and `samples/sample-legacy-3` (see [STAGE5.md](STAGE5.md)).
 - Spec task 27 (pytest-on-save hook) still needs the Kiro IDE to observe.

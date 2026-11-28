@@ -130,6 +130,6 @@ Results in the browser match the backend: see `docs/STAGE2_EVIDENCE.md`, where t
 
 ## Stage 3 pointers
 
-- Spec task 27: pytest-on-save hook verification.
+- Spec task 27: pytest-on-save hook verification (observed by the user in the Kiro IDE on 2026-11-28, see [STAGE5.md](STAGE5.md)).
 - Spec task 28: README demo script, including hosted vs local sections. Only a short `serve` section was added in Stage 2.
 - Consider real isolation for `prove` (container or network namespace) before any public hosting.

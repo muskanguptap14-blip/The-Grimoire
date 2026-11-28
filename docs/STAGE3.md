@@ -26,7 +26,7 @@ CLI cross-check: `grimoire prove samples/sample-legacy-N` reproduced the same di
 
 ## Known limitations
 
-- Spec task 27 stays unticked: the hook file and `pytest.ini` are verified by tests, but saving a file in an IDE to trigger the hook was not observed.
+- Spec task 27: the hook file and `pytest.ini` are verified by tests. At the end of Stage 3 the hook had not been observed in an IDE. The user later observed it in the Kiro IDE (2026-11-28); see [STAGE5.md](STAGE5.md).
 - `app.js` is checked by static tests and a few Node tests only, not by an automated browser suite.
 - The offline-import test skips the dashboard.
 - Origin policy: state-changing requests with a cross-origin or `null` Origin are rejected. Requests with no Origin header are allowed so the CLI and curl keep working.
@@ -51,4 +51,4 @@ README inaccuracies fixed: it still said `serve` was not implemented and exited 
 ### Spec tasks
 
 - Task 28 (README): ticked. Install, CLI, hosted vs local mode and the Python 3.11 / `lib2to3` constraint are documented, and following the README from a clean clone reached ALIVE on both samples.
-- Task 27 (pytest-on-save): left unticked. Verified by tests: `.kiro/hooks/pytest-on-save.json` has trigger `PostFileSave`, the required matcher and command, the matcher matches `src/` and `tests/` Python files and not `samples/`, and `pytest.ini` has `testpaths = tests` with `samples` in `norecursedirs`. Not verified: that saving a file in the IDE actually runs pytest and shows failures in the hook output. That needs the Kiro IDE.
+- Task 27 (pytest-on-save): left unticked at the end of Stage 3 (since observed by the user, see [STAGE5.md](STAGE5.md)). Verified by tests: `.kiro/hooks/pytest-on-save.json` has trigger `PostFileSave`, the required matcher and command, the matcher matches `src/` and `tests/` Python files and not `samples/`, and `pytest.ini` has `testpaths = tests` with `samples` in `norecursedirs`. At that time not verified: that saving a file in the IDE actually runs pytest and shows failures in the hook output.

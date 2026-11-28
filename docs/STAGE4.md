@@ -57,4 +57,4 @@ Sandbox result (an earlier run in the sandbox, not repeated for this paragraph):
 - A pure Node project still gets `UNVERIFIED` proof ("no entry point found"). With Node support on it now gets a Node Dockerfile (see Stage 5); `npm`-based proof is out of scope (no npm, Req 10.4).
 - A remaining `NODE_DEPRECATED_PACKAGE` warning counts as an unresolved finding, so in a mixed Python + Node repo proof reports `STILL_DEAD` without running the project (same rule as `UNKNOWN_IMPORT`).
 - Stage 5 added the dashboard "Node support" toggle and `samples/sample-legacy-3` (see [STAGE5.md](STAGE5.md)).
-- Spec task 27 (pytest-on-save hook) still needs the Kiro IDE to observe.
+- Spec task 27 (pytest-on-save hook) was not observed in Stage 4. The user observed it in the Kiro IDE on 2026-11-28; see [STAGE5.md](STAGE5.md).

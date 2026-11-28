@@ -76,7 +76,7 @@ Dashboard:
 
 - **Specs** (`.kiro/specs/grimoire-core/`): `requirements.md`, `design.md` and `tasks.md`. The work was done task by task from `tasks.md` (tasks 1 to 30), and tests follow the task list. Later requirement changes (for example Req 5.6 and 5.7 for the Node Dockerfile) were written into the spec before the code.
 - **Steering** (`.kiro/steering/`): `product.md` (what Grimoire is and its constraints), `tech.md` (Python 3.11, stdlib only, `lib2to3`), `structure.md` (repository layout) and `quality.md` (test and property rules: idempotent, parses, deterministic, non-destructive).
-- **Hooks** (`.kiro/hooks/pytest-on-save.json`): a `PostFileSave` hook with matcher `(src|tests)[/\\].*\.py$` that runs `python -m pytest -q -x`. The file exists and tests check its contents and matcher. It was not observed firing, because this work ran outside the Kiro IDE editor, so spec task 27 stays unticked. See [docs/STAGE5.md](docs/STAGE5.md).
+- **Hooks** (`.kiro/hooks/pytest-on-save.json`): a `PostFileSave` hook with matcher `(src|tests)[/\\].*\.py$` that runs `python -m pytest -q -x`. The file exists and tests check its contents and matcher. The user observed it in the Kiro IDE (2026-11-28, version unknown): saving `src/grimoire/models.py` triggered pytest and saving `samples/sample-legacy-1/main.py` did not, so spec task 27 is ticked. This is the user's report, not something the agent observed. See [docs/STAGE5.md](docs/STAGE5.md).
 
 ## Dashboard (Stage 2)
 

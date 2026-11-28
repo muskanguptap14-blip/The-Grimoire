@@ -115,7 +115,7 @@ Ordered smallest first. Each task is done when its acceptance criteria hold and 
   - `static/index.html`, `app.css`, `app.js`: dark theme, three panels, sample picker, diff coloring, log streaming, error display, `textContent` only.
   - Acceptance: page loads with no external requests (a test greps for `http://`/`https://` in static files); a manual run on both samples fills all three panels. (Req 8.1, 8.2, 8.4, 8.7)
 
-- [ ] 27. Pytest-on-save hook (file already created) (deferred to Stage 3)
+- [x] 27. Pytest-on-save hook (file already created) (observed by the user in the Kiro IDE on 2026-11-28, see docs/STAGE5.md)
   - `.kiro/hooks/pytest-on-save.json` (trigger `PostFileSave`, matcher `(src|tests)[/\\].*\.py$`, command `python -m pytest -q -x`) and `pytest.ini` (`testpaths = tests`, `norecursedirs = samples`) exist as plain files, so samples are never collected as tests.
   - Acceptance: saving a Python file in `src/` or `tests/` triggers pytest; a failing test shows in the hook output; saving a file in `samples/` does not.
 

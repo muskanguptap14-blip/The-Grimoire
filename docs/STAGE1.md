@@ -67,4 +67,4 @@ Exit codes: 0 ALIVE or no remaining findings, 1 STILL_DEAD or TIMED_OUT, 2 UNVER
 - Task 27 (pytest-on-save hook file) and the hosted/local README sections of task 28 are not verified.
 - Hypothesis is a dev dependency; `tech.md` already lists it.
 
-Stage 2 resolved the first three items (see [STAGE2.md](STAGE2.md)). The task 27 and 28 item is deferred to Stage 3.
+Stage 2 resolved the first three items (see [STAGE2.md](STAGE2.md)). The task 27 and 28 item was deferred to Stage 3. Task 27 was later observed by the user in the Kiro IDE (see [STAGE5.md](STAGE5.md)).

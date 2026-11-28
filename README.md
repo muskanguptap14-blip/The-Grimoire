@@ -47,7 +47,7 @@ python -m grimoire prove samples/sample-legacy-2 --wheelhouse wheelhouse
 
 Without `--wheelhouse`, sample 2 reports `UNVERIFIED` (exit 2) because its dependencies cannot be installed offline.
 
-## Demo script (dead to ALIVE)
+## Demo script (dead, then revived)
 
 Every command and click below was run during Stage 5. Run from the repository root with the venv from Setup active.
 
@@ -60,7 +60,7 @@ python -m grimoire prove samples/sample-legacy-1     # PROOF: ALIVE, prints TALL
 python -m grimoire prove samples/sample-legacy-2 --wheelhouse wheelhouse   # ALIVE, exit 0 (LOST LEDGER ALIVE)
 ```
 
-The CLI and dashboard have no "before" proof label. The dead state is the 10 (or 9) findings plus the original failing to run. The proof status shown after repair is `ALIVE`. Proof reports `STILL_DEAD` only when the repaired project fails to run; this demo never produced that status.
+The CLI and dashboard have no "before" proof label, so the demo does not show a status changing from one label to another. What it shows: the autopsy lists 10 findings (9 for sample 2) and after repair the findings count is zero. The original `main.py` fails with a `SyntaxError`, and the revived one runs and prints its `ALIVE` line (`TALLY KEEPER ALIVE`), with proof status `ALIVE`. `STILL_DEAD` is reported only when the repaired project fails to run; this demo never produced that status.
 
 Dashboard:
 

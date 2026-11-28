@@ -84,7 +84,7 @@ Run on branch `stage4/node-manifest-modernizer`, Python 3.11 venv outside the re
 ### Not verified
 
 - Task 27: the pytest-on-save hook was not observed firing (see above). The task stays unticked.
-- `STILL_DEAD` was not produced in any run. The README demo shows the dead state through findings and the original failing to run, and the ALIVE state through the proof.
+- `STILL_DEAD` was not produced in any run. The README demo shows the dead state as a findings count above zero plus the original `main.py` failing with a `SyntaxError`, and the revived state as zero findings plus a run that prints its `ALIVE` line.
 - `sample-legacy-3` runtime behavior (`EMBER LEDGER ALIVE`) is not proven, since Node is never run.
 - In the sample-legacy-2 pass the header read "Connecting / mode: unknown" because the script read it right after page load, before the health response arrived. The sample-legacy-1 pass read "mode: hosted". All API calls returned 200.
 

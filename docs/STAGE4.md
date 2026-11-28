@@ -31,6 +31,7 @@ Sections repaired: `dependencies`, `devDependencies`, `optionalDependencies`. `p
 - **Targeted text edits, not re-serialization.** `fix_manifest` locates each value's exact span and replaces only that string, so indentation, CRLF, array layout, escapes and key order are byte-identical and the diff shows just the changed lines. Each edit is verified by re-parsing and comparing with the expected data; if that ever fails, it falls back to the JSON encoder with the original indent and line ending.
 - **Range handling is conservative.** `upper_bound()` understands `^ ~ x-ranges < <= exact ||`. Anything it does not understand (tags, URLs, `file:`, `workspace:`, `npm:` aliases, hyphen ranges, unbounded `>=`) returns `None`, which always means "do not flag". A range is outdated only when no version it allows reaches the table's `below`.
 - **Idempotence is guaranteed by construction.** Aliases (`npm:`) are skipped on re-run, and a test asserts that no table replacement matches its own rule.
+- **UNSUPPORTED_MANIFEST reason wording changed.** The reason used to read "Node.js analysis is not supported". It now reads "Node.js analysis is not enabled", because Node analysis exists and is switched on with `--node`.
 - **Same shape as the Python side.** `fix_manifest(text, file) -> (text, findings)` mirrors `requirements.fix_requirements`; autopsy discards the text and `revive` writes it. `revive(node=True)` also adds a validation row "all package.json files parse".
 
 ## Files
@@ -39,10 +40,13 @@ Sections repaired: `dependencies`, `devDependencies`, `optionalDependencies`. `p
 
 ## Verification
 
-Run on Python 3.11 in a fresh venv with `pip install -e '.[dev]'` (pytest 9.2.0, Hypothesis 6.170.23):
+Run on Python 3.11 in a venv with the dev extras (pytest and Hypothesis), on the branch before the `.dockerignore` and sample-card changes:
 
-- `python -m pytest -q`: 299 passed, 0 failed (88 new unit tests in `tests/unit/test_nodejs.py` plus the Hypothesis test `tests/property/test_nodejs_properties.py`, on top of the 210 Stage 1-3 tests).
-- `node --test tests/frontend/`: 19 passed.
+- `python -m pytest -q`: 314 passed, 0 failed. This includes the Hypothesis test `tests/property/test_nodejs_properties.py` and the unit tests in `tests/unit/test_nodejs.py`.
+- `node --test tests/frontend/`: 21 passed.
+
+Sandbox result (an earlier run in the sandbox, not repeated for this paragraph):
+
 - The property checks in `nodejs_checks.py` (valid JSON, key order kept at every level, idempotent, deterministic, only dependency sections and `engines.node` touched, clean manifests returned byte for byte) also held on 20,000 random manifests with a plain random loop (seed 1234) before the Hypothesis run.
 - Fixture run: `revive tests/fixtures/node-legacy --node` produced a diff of 12 changed lines (6 removed, 6 added) in `package.json` only; `index.js` and the source tree stayed byte-identical.
 

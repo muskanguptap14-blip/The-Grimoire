@@ -47,6 +47,37 @@ python -m grimoire prove samples/sample-legacy-2 --wheelhouse wheelhouse
 
 Without `--wheelhouse`, sample 2 reports `UNVERIFIED` (exit 2) because its dependencies cannot be installed offline.
 
+## Demo script (dead to ALIVE)
+
+Every command and click below was run during Stage 5. Run from the repository root with the venv from Setup active.
+
+Terminal, sample 1 (Tally Keeper):
+
+```
+python samples/sample-legacy-1/main.py          # SyntaxError at line 39 (0755), exit 1: the project is dead
+python -m grimoire autopsy samples/sample-legacy-1   # Cause of Death: SYNTAX: 10 findings
+python -m grimoire prove samples/sample-legacy-1     # PROOF: ALIVE, prints TALLY KEEPER ALIVE, exit 0
+python -m grimoire prove samples/sample-legacy-2 --wheelhouse wheelhouse   # ALIVE, exit 0 (LOST LEDGER ALIVE)
+```
+
+The CLI and dashboard have no "before" proof label. The dead state is the 10 (or 9) findings plus the original failing to run. The proof status shown after repair is `ALIVE`. Proof reports `STILL_DEAD` only when the repaired project fails to run; this demo never produced that status.
+
+Dashboard:
+
+1. `python -m grimoire serve`, then open http://127.0.0.1:8765/ (hosted mode).
+2. Click the `sample-legacy-1` card.
+3. Click **Scan repository**. The Autopsy panel lists 10 findings.
+4. Leave **Include proof run** checked (it is by default) and click **Resurrect**.
+5. The outcome reads "Resurrected (SUCCESS)". Open the **Diff**, **Dockerfile**, **Validation** and **Proof log** tabs. The proof log shows `Status: ALIVE, exit code 0` and `TALLY KEEPER ALIVE`.
+6. Repeat with `sample-legacy-2` (9 findings, patches `main.py` and `requirements.txt`, proof ALIVE using the bundled wheelhouse).
+7. Node: select `sample-legacy-3`, tick **Node support**, Scan repository (7 findings instead of 2 INFO), Resurrect. `package.json` is repaired and the diff shows it. The outcome is PARTIAL: proof is UNVERIFIED ("no entry point found; nothing was run") because Grimoire never runs Node or npm. `EMBER LEDGER ALIVE` is not proven.
+
+## How Kiro was used
+
+- **Specs** (`.kiro/specs/grimoire-core/`): `requirements.md`, `design.md` and `tasks.md`. The work was done task by task from `tasks.md` (tasks 1 to 30), and tests follow the task list. Later requirement changes (for example Req 5.6 and 5.7 for the Node Dockerfile) were written into the spec before the code.
+- **Steering** (`.kiro/steering/`): `product.md` (what Grimoire is and its constraints), `tech.md` (Python 3.11, stdlib only, `lib2to3`), `structure.md` (repository layout) and `quality.md` (test and property rules: idempotent, parses, deterministic, non-destructive).
+- **Hooks** (`.kiro/hooks/pytest-on-save.json`): a `PostFileSave` hook with matcher `(src|tests)[/\\].*\.py$` that runs `python -m pytest -q -x`. The file exists and tests check its contents and matcher. It was not observed firing, because this work ran outside the Kiro IDE editor, so spec task 27 stays unticked. See [docs/STAGE5.md](docs/STAGE5.md).
+
 ## Dashboard (Stage 2)
 
 ```

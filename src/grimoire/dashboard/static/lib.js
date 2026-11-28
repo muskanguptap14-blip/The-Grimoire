@@ -128,6 +128,17 @@
     return out;
   }
 
+  // Copy a source body and add the run options. `node: true` is sent only when the toggle is on.
+  function withOptions(sourceBody, options) {
+    var body = {};
+    Object.keys(sourceBody).forEach(function (k) {
+      body[k] = sourceBody[k];
+    });
+    if (options && typeof options.prove === "boolean") body.prove = options.prove;
+    if (options && options.node === true) body.node = true;
+    return body;
+  }
+
   function formatDuration(seconds) {
     if (seconds === null || seconds === undefined || typeof seconds !== "number" || isNaN(seconds) || seconds < 0) return "n/a";
     if (seconds < 1) return Math.round(seconds * 1000) + " ms";
@@ -324,6 +335,7 @@
     parseDiff: parseDiff,
     diffStats: diffStats,
     splitDiffByFile: splitDiffByFile,
+    withOptions: withOptions,
     formatDuration: formatDuration,
     formatNumber: formatNumber,
     formatBytes: formatBytes,

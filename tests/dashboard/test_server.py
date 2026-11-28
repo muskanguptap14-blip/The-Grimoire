@@ -17,6 +17,7 @@ from grimoire.dashboard.results import result_payload
 from tests.integration.test_samples import NAMES, SAMPLES, tree_hash
 
 ROOT = Path(__file__).resolve().parents[2]
+NODE_SAMPLE = "sample-legacy-3"
 WHEELHOUSE = ROOT / "wheelhouse"
 
 
@@ -75,9 +76,9 @@ def local():
 
 @pytest.fixture(autouse=True)
 def samples_untouched():
-    before = {n: tree_hash(SAMPLES / n) for n in NAMES}
+    before = {n: tree_hash(SAMPLES / n) for n in (*NAMES, NODE_SAMPLE)}
     yield
-    assert {n: tree_hash(SAMPLES / n) for n in NAMES} == before
+    assert {n: tree_hash(SAMPLES / n) for n in (*NAMES, NODE_SAMPLE)} == before
 
 
 def test_health_and_headers(hosted):
@@ -93,10 +94,24 @@ def test_health_and_headers(hosted):
 def test_samples_listing_is_data_driven(hosted):
     _s, body = hosted.json("GET", "/api/samples")
     ids = [s["id"] for s in body["samples"]]
-    assert ids == sorted(NAMES)
+    assert ids == sorted((*NAMES, NODE_SAMPLE))
     s2 = body["samples"][1]
     assert s2["title"] == "Lost Ledger" and s2["python_files"] == 1
     assert {"path": "requirements.txt", "size": (SAMPLES / NAMES[1] / "requirements.txt").stat().st_size} in s2["files"]
+
+
+def test_node_sample_is_listed_with_its_files(hosted):
+    _s, body = hosted.json("GET", "/api/samples")
+    s3 = next(s for s in body["samples"] if s["id"] == NODE_SAMPLE)
+    assert s3["title"] == "Ember Ledger" and s3["python_files"] == 0
+    assert [f["path"] for f in s3["files"]] == ["README.md", "index.js", "package.json"]
+
+
+def test_node_sample_source_is_a_node_project():
+    assert "EMBER LEDGER ALIVE" in (SAMPLES / NODE_SAMPLE / "index.js").read_text()
+    manifest = json.loads((SAMPLES / NODE_SAMPLE / "package.json").read_text())
+    assert manifest["engines"]["node"] == "0.10.x" and "node-uuid" in manifest["dependencies"]
+    assert not list((SAMPLES / NODE_SAMPLE).rglob("*.py"))
 
 
 def test_listing_follows_the_directory(tmp_path):
@@ -350,3 +365,50 @@ def test_origin_missing_allowed_but_null_rejected(hosted):
     assert hosted.json("POST", "/api/autopsy", {"sample": NAMES[0]})[0] == 200
     status, body = hosted.json("POST", "/api/autopsy", {"sample": NAMES[0]}, headers={"Origin": "null"})
     assert status == 403 and body["error"] == "bad_origin"
+
+
+# ------------------------------------------------------------------------------ node support
+
+
+def test_autopsy_node_flag_matches_engine(hosted):
+    _s, off = hosted.json("POST", "/api/autopsy", {"sample": NODE_SAMPLE})
+    assert not any(f["rule_id"].startswith("NODE_") for f in off["findings"])
+    status, on = hosted.json("POST", "/api/autopsy", {"sample": NODE_SAMPLE, "node": True})
+    assert status == 200
+    report = autopsy.autopsy(SAMPLES / NODE_SAMPLE, node=True)
+    assert on["findings"] == json.loads(autopsy.report_json(report))["findings"]
+    assert {f["rule_id"] for f in on["findings"]} >= {"NODE_RENAMED_PACKAGE", "NODE_BAD_RANGE", "NODE_ENGINE_OUTDATED"}
+    assert hosted.json("POST", "/api/autopsy", {"sample": NODE_SAMPLE, "node": False})[1] == off
+
+
+def test_node_flag_must_be_boolean(hosted):
+    for path in ("/api/autopsy", "/api/runs"):
+        for bad in ("yes", 1, None):
+            assert hosted.json("POST", path, {"sample": NODE_SAMPLE, "node": bad})[0] == 400
+
+
+def test_node_run_shows_package_json_diff(hosted):
+    status, body = hosted.json("POST", "/api/runs", {"sample": NODE_SAMPLE, "node": True, "prove": False})
+    assert status == 202
+    snap = hosted.wait_run(body["run_id"])
+    assert snap["state"] == "done" and snap["node"] is True
+    result = snap["result"]
+    assert [p["path"] for p in result["patches"]] == ["package.json"]
+    assert "--- a/package.json" in result["diff"] and "+++ b/package.json" in result["diff"]
+    assert '+        "node": ">=18"' in result["diff"]
+    assert "--- a/index.js" not in result["diff"]
+    assert result["stats"]["issues_after"] == 0
+    direct = revive.revive(SAMPLES / NODE_SAMPLE, prove=False, node=True)
+    assert result == json.loads(json.dumps(result_payload(direct)))
+
+
+def test_run_without_node_flag_leaves_package_json(hosted):
+    _s, body = hosted.json("POST", "/api/runs", {"sample": NODE_SAMPLE, "prove": False})
+    snap = hosted.wait_run(body["run_id"])
+    assert snap["node"] is False and snap["result"]["patches"] == []
+
+
+def test_node_flag_keeps_hosted_allowlist(hosted, tmp_path):
+    for path in ("/api/autopsy", "/api/runs"):
+        assert hosted.json("POST", path, {"sample": "nope", "node": True})[0] == 404
+        assert hosted.json("POST", path, {"path": str(tmp_path), "node": True})[0] == 403

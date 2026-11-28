@@ -229,3 +229,19 @@ test("validateZipFile and validatePath", () => {
   assert.match(L.validatePath(undefined), /Enter/);
   assert.match(L.validatePath("a\u0000b"), /invalid/);
 });
+
+test("withOptions copies the source body and sends node only when on", () => {
+  const src = { sample: "sample-legacy-3" };
+  assert.deepEqual(L.withOptions(src, { prove: true, node: true }), { sample: "sample-legacy-3", prove: true, node: true });
+  assert.deepEqual(L.withOptions(src, { prove: false, node: false }), { sample: "sample-legacy-3", prove: false });
+  assert.deepEqual(L.withOptions(src, { node: true }), { sample: "sample-legacy-3", node: true });
+  assert.deepEqual(L.withOptions(src, undefined), { sample: "sample-legacy-3" });
+  assert.deepEqual(src, { sample: "sample-legacy-3" });
+});
+
+test("splitDiffByFile keeps a package.json diff", () => {
+  const diff = ["--- a/package.json", "+++ b/package.json", "@@ -1,3 +1,3 @@", '-        "node": "0.10.x"', '+        "node": ">=18"', ""].join("\n");
+  const out = L.splitDiffByFile(diff);
+  assert.deepEqual(Object.keys(out), ["package.json"]);
+  assert.ok(out["package.json"].includes('+        "node": ">=18"'));
+});

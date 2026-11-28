@@ -206,6 +206,7 @@
     $("path-input").disabled = !local || any;
     $("zip-input").disabled = !local || any;
     $("prove-check").disabled = b.run;
+    $("node-check").disabled = any;
     $("scan-btn").textContent = b.scan ? "Scanning..." : "Scan repository";
     $("resurrect-btn").textContent = b.run ? "Resurrecting..." : "Resurrect";
     $("download-btn").disabled = !state.result;
@@ -224,7 +225,7 @@
     state.busy.path = true;
     updateButtons();
     $("path-msg").textContent = "Checking path...";
-    api("POST", "/api/autopsy", { path: path })
+    api("POST", "/api/autopsy", L.withOptions({ path: path }, { node: $("node-check").checked }))
       .then(function (d) {
         $("path-msg").textContent = "Path accepted.";
         $("path-msg").className = "field-msg good";
@@ -276,7 +277,7 @@
     $("autopsy-status").textContent = "Scanning...";
     updateButtons();
     var src = state.source;
-    api("POST", "/api/autopsy", src.body)
+    api("POST", "/api/autopsy", L.withOptions(src.body, { node: $("node-check").checked }))
       .then(function (d) {
         if (state.source !== src) return;
         state.autopsy = d;
@@ -516,11 +517,7 @@
     renderResults();
     renderDetail();
     renderLog();
-    var body = {};
-    Object.keys(state.source.body).forEach(function (k) {
-      body[k] = state.source.body[k];
-    });
-    body.prove = $("prove-check").checked;
+    var body = L.withOptions(state.source.body, { prove: $("prove-check").checked, node: $("node-check").checked });
     api("POST", "/api/runs", body)
       .then(function (d) {
         var run = { id: d.run_id, stages: [], lastId: 0, ended: false, es: null, poll: null, stopped: false, starts: {} };
@@ -907,6 +904,9 @@
     });
     $("scan-btn").addEventListener("click", scan);
     $("resurrect-btn").addEventListener("click", startRun);
+    $("node-check").addEventListener("change", function () {
+      if (state.source && state.autopsy) scan(); // the autopsy depends on this option
+    });
     $("prove-check").addEventListener("change", function () {
       $("caution").classList.toggle("dim", !this.checked);
     });

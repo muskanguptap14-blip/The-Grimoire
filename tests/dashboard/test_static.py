@@ -151,3 +151,10 @@ def test_static_files_are_package_data():
         assert base.joinpath(name).is_file(), name
     pyproject = (Path(__file__).resolve().parents[2] / "pyproject.toml").read_text(encoding="utf-8")
     assert "dashboard/static/*" in pyproject
+
+
+def test_node_toggle_is_wired_and_local():
+    assert "node-check" in page().ids
+    app = text("app.js")
+    assert app.count('L.withOptions(') == 3 and 'node: $("node-check").checked' in app
+    assert "innerHTML" not in app and "http://" not in text("index.html")

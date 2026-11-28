@@ -160,10 +160,11 @@ def safe_extract(data: bytes, dest: Path) -> int:
 
 
 class Run:
-    def __init__(self, run_id: str, source: dict[str, str], prove: bool) -> None:
+    def __init__(self, run_id: str, source: dict[str, str], prove: bool, node: bool = False) -> None:
         self.id = run_id
         self.source = source
         self.prove = prove
+        self.node = node
         self.state = "queued"
         self.events: list[dict[str, Any]] = []
         self.stages = {s: {"name": s, "status": "pending", "message": "", "duration_s": None} for s in STAGES if prove or s != "prove"}
@@ -223,6 +224,7 @@ class Run:
                 "state": self.state,
                 "source": self.source,
                 "prove": self.prove,
+                "node": self.node,
                 "stages": list(self.stages.values()),
                 "events": list(self.events),
                 "result": self.result,
@@ -311,12 +313,12 @@ class DashboardServer(ThreadingHTTPServer):
         return str(self.workspace / "uploads" / value), {"kind": "upload", "id": value}
 
     # -- runs
-    def start_run(self, source_path: str, source: dict[str, str], prove: bool) -> Run:
+    def start_run(self, source_path: str, source: dict[str, str], prove: bool, node: bool = False) -> Run:
         with self.lock:
             active = sum(1 for r in self.runs.values() if not r.finished)
             if active >= MAX_CONCURRENT_RUNS:
                 raise ApiError(429, "too_many_runs", f"at most {MAX_CONCURRENT_RUNS} runs may be active")
-            run = Run(uuid.uuid4().hex, source, prove)
+            run = Run(uuid.uuid4().hex, source, prove, node)
             self.runs[run.id] = run
             while len(self.runs) > KEEP_RUNS:
                 oldest = next((rid for rid, r in self.runs.items() if r.finished), None)
@@ -334,6 +336,7 @@ class DashboardServer(ThreadingHTTPServer):
             report = revive_mod.revive(
                 source_path,
                 prove=run.prove,
+                node=run.node,
                 wheelhouse=self.config.wheelhouse,
                 on_event=run.on_event,
                 on_line=run.on_line,
@@ -531,6 +534,13 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     # -- POST
+    @staticmethod
+    def _node_flag(body: dict[str, Any]) -> bool:
+        node = body.get("node", False)
+        if not isinstance(node, bool):
+            raise ApiError(400, "bad_request", "node must be true or false")
+        return node
+
     def do_POST(self) -> None:
         self._dispatch(self._post)
 
@@ -545,15 +555,18 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(201, {"upload_id": srv.store_upload(data)})
         if path == "/api/autopsy":
             body = self._json_body()
-            source_path, source = srv.resolve_source(body)
-            return self._json(200, {"source": source, **results.autopsy_payload(autopsy_mod.autopsy(source_path))})
+            node = self._node_flag(body)
+            source_path, source = srv.resolve_source({k: v for k, v in body.items() if k != "node"})
+            report = autopsy_mod.autopsy(source_path, node=node)
+            return self._json(200, {"source": source, **results.autopsy_payload(report)})
         if path == "/api/runs":
             body = self._json_body()
             prove = body.get("prove", True)
             if not isinstance(prove, bool):
                 raise ApiError(400, "bad_request", "prove must be true or false")
-            source_path, source = srv.resolve_source({k: v for k, v in body.items() if k != "prove"})
-            run = srv.start_run(source_path, source, prove)
+            node = self._node_flag(body)
+            source_path, source = srv.resolve_source({k: v for k, v in body.items() if k not in ("prove", "node")})
+            run = srv.start_run(source_path, source, prove, node)
             return self._json(202, {"run_id": run.id})
         raise ApiError(404, "not_found", "no such endpoint")
 

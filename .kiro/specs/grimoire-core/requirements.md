@@ -48,7 +48,7 @@ Requirements use EARS patterns: Ubiquitous (The system shall), Event-driven (WHE
 3. WHEN revival completes, THE Grimoire SHALL generate a Dockerfile as text based on `python:3.11-slim`, installing `requirements.txt` and using the detected entry point.
 4. THE Grimoire SHALL NOT build or run the Dockerfile.
 5. IF a Dockerfile already exists, THEN THE Grimoire SHALL write the generated one as `Dockerfile.grimoire` in the Working Copy.
-6. WHERE Node support is enabled and the Working Copy is Node-only (a root `package.json` and no Python source files), THE Grimoire SHALL instead generate a Dockerfile as text based on `node:22-slim`, with `COPY package*.json ./`, `RUN npm install --omit=dev` and `CMD ["node", "<main>"]`, where `<main>` is the `main` field of `package.json`, or `index.js` when it is missing or unsafe. Requirement 5.3 applies to every other project, with byte-identical output.
+6. WHERE Node support is enabled and the Working Copy is Node-only (a root `package.json` and no Python source files), THE Grimoire SHALL instead generate a Dockerfile as text based on `node:22-slim`, with exactly these lines in order: `FROM node:22-slim`, `WORKDIR /app`, `COPY package*.json ./`, `RUN npm install --omit=dev`, `COPY . .` and `CMD ["node", "<main>"]`, where `<main>` is the `main` field of `package.json`, or `index.js` when it is missing or unsafe. Requirement 5.3 applies to every other project, with byte-identical output.
 7. THE Grimoire SHALL NOT build or run the Node Dockerfile, and SHALL NOT invoke `npm` or `docker` (Req 5.4, Req 10.4).
 
 ## Requirement 6: Proof of Life

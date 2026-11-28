@@ -41,6 +41,8 @@ Line-based parser that keeps comments and options verbatim. For each requirement
 ## Dockerfile (`dockerfile.py`)
 Pure string builder: `FROM python:3.11-slim`, `WORKDIR /app`, `COPY requirements.txt` (if present), `RUN pip install --no-cache-dir -r requirements.txt`, `COPY . .`, `CMD ["python", "<entry>"]`. Entry detection order: `__main__.py`, `main.py`, `run.py`, `app.py`, or a `grimoire.toml` `entry` key. Never executed.
 
+For a Node-only Working Copy (root `package.json`, no Python source, Node support enabled) the builder emits exactly: `FROM node:22-slim`, `WORKDIR /app`, `COPY package*.json ./`, `RUN npm install --omit=dev`, `COPY . .`, `CMD ["node", "<main>"]`. `<main>` is the `package.json` `main` field, or `index.js` when it is missing or unsafe.
+
 ## Verification (`verify.py`)
 1. Copy patched Working Copy to a temp dir (`tempfile.TemporaryDirectory`).
 2. `python -m venv <tmp>/venv` (no pip index use).

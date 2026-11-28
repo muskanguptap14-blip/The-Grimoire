@@ -39,14 +39,12 @@ Sections repaired: `dependencies`, `devDependencies`, `optionalDependencies`. `p
 
 ## Verification
 
-Run in a sandbox without `pytest` or `hypothesis` (no network, no install):
+Run on Python 3.11 in a fresh venv with `pip install -e '.[dev]'` (pytest 9.2.0, Hypothesis 6.170.23):
 
-- All 290 pytest-style tests outside the Hypothesis modules passed (unit 196, integration 41, dashboard 53; 88 are new) using a throwaway stand-in for `pytest` (not committed). That includes both samples reaching `ALIVE`, the offline-guarantee tests and the 26 pipeline tests.
+- `python -m pytest -q`: 299 passed, 0 failed (88 new unit tests in `tests/unit/test_nodejs.py` plus the Hypothesis test `tests/property/test_nodejs_properties.py`, on top of the 210 Stage 1-3 tests).
 - `node --test tests/frontend/`: 19 passed.
-- The property checks in `nodejs_checks.py` (valid JSON, key order kept at every level, idempotent, deterministic, only dependency sections and `engines.node` touched, clean manifests returned byte for byte) held on 20,000 random manifests (13,587 of them repaired) with seed 1234.
+- The property checks in `nodejs_checks.py` (valid JSON, key order kept at every level, idempotent, deterministic, only dependency sections and `engines.node` touched, clean manifests returned byte for byte) also held on 20,000 random manifests with a plain random loop (seed 1234) before the Hypothesis run.
 - Fixture run: `revive tests/fixtures/node-legacy --node` produced a diff of 12 changed lines (6 removed, 6 added) in `package.json` only; `index.js` and the source tree stayed byte-identical.
-
-**Not run here:** the real `pytest` runner, `test_nodejs_properties.py` itself (the Hypothesis wrapper), and the existing Hypothesis modules (`tests/property/test_properties.py`, untouched by this stage). Run `python -m pytest -q` once in a normal environment before merging.
 
 ## Known limitations
 

@@ -55,7 +55,7 @@ CMD ["node", "<main>"]
 ## Known limitations
 
 - The outcome for `sample-legacy-3` is PARTIAL, not SUCCESS: there is no Python entry point, so proof is UNVERIFIED ("no entry point found; nothing was run"). Grimoire never runs Node or npm (Req 10.4), so `EMBER LEDGER ALIVE` is not proven by the engine.
-- The sample card says "0 Python files" for this sample.
+- (Fixed) The sample card for this sample now shows its package.json and JavaScript file counts instead of "0 Python files".
 
 After the Node Dockerfile step: `python -m pytest -q` 314 passed (7 new Dockerfile tests); `node --test tests/frontend/` 21 passed.
 

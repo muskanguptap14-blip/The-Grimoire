@@ -175,6 +175,20 @@
     return n === 1 ? one : many || one + "s";
   }
 
+  // One-line summary for a sample card. A sample with no Python file but a package.json
+  // is a Node sample and shows package.json and JavaScript counts instead.
+  function sampleSummary(sample) {
+    var files = sample.files || [];
+    var total = files.length + " " + plural(files.length, "file") + " total";
+    var isNode = !sample.python_files && files.some(function (f) { return /(^|\/)package\.json$/.test(f.path); });
+    if (!isNode) {
+      return sample.python_files + " Python " + plural(sample.python_files, "file") + ", " + total;
+    }
+    var pkg = files.filter(function (f) { return /(^|\/)package\.json$/.test(f.path); }).length;
+    var js = files.filter(function (f) { return /\.(js|mjs|cjs)$/.test(f.path); }).length;
+    return pkg + " package.json, " + js + " JavaScript " + plural(js, "file") + ", " + total;
+  }
+
   var OUTCOMES = {
     SUCCESS: { label: "Resurrected", tone: "success", icon: "\u2713", summary: "Fully repaired and verified alive." },
     PARTIAL: { label: "Partial recovery", tone: "partial", icon: "\u25D0", summary: "Repairs applied, but work remains or the result is unverified." },
@@ -340,6 +354,7 @@
     formatNumber: formatNumber,
     formatBytes: formatBytes,
     plural: plural,
+    sampleSummary: sampleSummary,
     outcomePresentation: outcomePresentation,
     groupStatus: groupStatus,
     pipelineNodes: pipelineNodes,

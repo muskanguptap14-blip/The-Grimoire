@@ -245,3 +245,14 @@ test("splitDiffByFile keeps a package.json diff", () => {
   assert.deepEqual(Object.keys(out), ["package.json"]);
   assert.ok(out["package.json"].includes('+        "node": ">=18"'));
 });
+
+test("sampleSummary keeps the Python wording and counts package.json and JavaScript for Node samples", () => {
+  const py = { python_files: 1, files: [{ path: "README.md" }, { path: "main.py" }] };
+  assert.equal(L.sampleSummary(py), "1 Python file, 2 files total");
+  assert.equal(L.sampleSummary({ python_files: 2, files: [{ path: "a.py" }, { path: "b.py" }, { path: "requirements.txt" }] }), "2 Python files, 3 files total");
+  const node = { python_files: 0, files: [{ path: "README.md" }, { path: "index.js" }, { path: "package.json" }] };
+  assert.equal(L.sampleSummary(node), "1 package.json, 1 JavaScript file, 3 files total");
+  const node2 = { python_files: 0, files: [{ path: "a.js" }, { path: "b.mjs" }, { path: "package.json" }] };
+  assert.equal(L.sampleSummary(node2), "1 package.json, 2 JavaScript files, 3 files total");
+  assert.equal(L.sampleSummary({ python_files: 0, files: [{ path: "README.md" }] }), "0 Python files, 1 file total");
+});

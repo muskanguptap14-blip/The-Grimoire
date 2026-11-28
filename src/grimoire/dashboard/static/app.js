@@ -155,7 +155,7 @@
         [
           h("span", { cls: "sample-id mono", text: s.id }),
           h("span", { cls: "sample-title", text: s.title }),
-          h("span", { cls: "muted", text: s.python_files + " Python " + L.plural(s.python_files, "file") + ", " + s.files.length + " " + L.plural(s.files.length, "file") + " total" }),
+          h("span", { cls: "muted", text: L.sampleSummary(s) }),
           files,
         ]
       );

@@ -158,3 +158,10 @@ def test_node_toggle_is_wired_and_local():
     app = text("app.js")
     assert app.count('L.withOptions(') == 3 and 'node: $("node-check").checked' in app
     assert "innerHTML" not in app and "http://" not in text("index.html")
+
+
+def test_sample_card_uses_sample_summary():
+    app = text("app.js")
+    assert "L.sampleSummary(s)" in app
+    assert '" Python "' not in app
+    assert "sampleSummary" in text("lib.js")

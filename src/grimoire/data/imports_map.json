@@ -1,0 +1,41 @@
+{
+  "ConfigParser": {
+    "new": "configparser",
+    "attrs": {"SafeConfigParser": "configparser.ConfigParser"}
+  },
+  "Cookie": {"new": "http.cookies", "attrs": {}},
+  "HTMLParser": {"new": "html.parser", "attrs": {}},
+  "Queue": {"new": "queue", "attrs": {}},
+  "SimpleHTTPServer": {"new": "http.server", "attrs": {}},
+  "SocketServer": {"new": "socketserver", "attrs": {}},
+  "StringIO": {"new": "io", "attrs": {"StringIO": "io.StringIO"}},
+  "Tkinter": {"new": "tkinter", "attrs": {}},
+  "__builtin__": {"new": "builtins", "attrs": {}},
+  "BaseHTTPServer": {"new": "http.server", "attrs": {}},
+  "anydbm": {"new": "dbm", "attrs": {}},
+  "cPickle": {"new": "pickle", "attrs": {}},
+  "cStringIO": {"new": "io", "attrs": {"StringIO": "io.StringIO"}},
+  "commands": {
+    "new": "subprocess",
+    "attrs": {
+      "getoutput": "subprocess.getoutput",
+      "getstatusoutput": "subprocess.getstatusoutput"
+    }
+  },
+  "cookielib": {"new": "http.cookiejar", "attrs": {}},
+  "copy_reg": {"new": "copyreg", "attrs": {}},
+  "htmlentitydefs": {"new": "html.entities", "attrs": {}},
+  "httplib": {"new": "http.client", "attrs": {}},
+  "repr": {"new": "reprlib", "attrs": {}},
+  "thread": {"new": "_thread", "attrs": {}},
+  "urllib2": {
+    "new": "urllib.request",
+    "attrs": {
+      "HTTPError": "urllib.error.HTTPError",
+      "URLError": "urllib.error.URLError",
+      "urlopen": "urllib.request.urlopen"
+    }
+  },
+  "urlparse": {"new": "urllib.parse", "attrs": {}},
+  "xmlrpclib": {"new": "xmlrpc.client", "attrs": {}}
+}

@@ -22,8 +22,8 @@ The-Grimoire/
 │   ├── data/                imports_map.json, packages_map.json, node_map.json
 │   └── dashboard/           server.py, static/ (index.html, app.css, app.js)
 ├── samples/
-│   ├── crypt_calculator/    original dead Python 2 mini-repo
-│   └── lost_ledger/         original dead mini-repo with bad requirements and old imports
+│   ├── sample-legacy-1/     original dead Python 2 mini-repo (Tally Keeper)
+│   └── sample-legacy-2/     original dead mini-repo with bad requirements and old imports (Lost Ledger)
 ├── tests/
 │   ├── unit/, property/, integration/
 │   └── conftest.py

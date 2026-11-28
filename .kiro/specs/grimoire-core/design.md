@@ -41,6 +41,8 @@ Line-based parser that keeps comments and options verbatim. For each requirement
 ## Dockerfile (`dockerfile.py`)
 Pure string builder: `FROM python:3.11-slim`, `WORKDIR /app`, `COPY requirements.txt` (if present), `RUN pip install --no-cache-dir -r requirements.txt`, `COPY . .`, `CMD ["python", "<entry>"]`. Entry detection order: `__main__.py`, `main.py`, `run.py`, `app.py`, or a `grimoire.toml` `entry` key. Never executed.
 
+For a Node-only Working Copy (root `package.json`, no Python source, Node support enabled) the builder emits exactly: `FROM node:22-slim`, `WORKDIR /app`, `COPY package*.json ./`, `RUN npm install --omit=dev`, `COPY . .`, `CMD ["node", "<main>"]`. `<main>` is the `package.json` `main` field, or `index.js` when it is missing or unsafe. `generate_node_dockerignore()` returns the text `node_modules\n.git\n`, carried on `Report.dockerignore` and written next to `Dockerfile.grimoire` by `_persist`.
+
 ## Verification (`verify.py`)
 1. Copy patched Working Copy to a temp dir (`tempfile.TemporaryDirectory`).
 2. `python -m venv <tmp>/venv` (no pip index use).
@@ -61,6 +63,8 @@ No networking modules imported in the engine. A test monkeypatches `socket.socke
 - All repo-derived text is inserted with `textContent`, not `innerHTML`, to avoid XSS from hostile repos.
 
 ## Samples
+
+> Naming note: the samples are implemented as `samples/sample-legacy-1` (Tally Keeper, replaces crypt_calculator) and `samples/sample-legacy-2` (Lost Ledger, replaces lost_ledger) by user override. Success lines are `TALLY KEEPER ALIVE` and `LOST LEDGER ALIVE`.
 - `samples/crypt_calculator/`: Python 2 script with `print` statements, `except ValueError, e`, `raw_input` and `xrange`. Prints `CRYPT CALCULATOR ALIVE` after revival.
 - `samples/lost_ledger/`: uses `ConfigParser`, `StringIO`, `urllib2` (for parse helpers only, no network calls made), and a `requirements.txt` with a renamed package and a removed one. Prints `LOST LEDGER ALIVE` after revival; its runtime only needs the stdlib, and requirements fixing is checked by the diff.
 Both are written from scratch and kept small.

@@ -1,0 +1,58 @@
+{
+  "renames": {
+    "beautifulsoup": "beautifulsoup4",
+    "bs4": "beautifulsoup4",
+    "cv2": "opencv-python",
+    "mysql-python": "mysqlclient",
+    "pil": "Pillow",
+    "py-bcrypt": "bcrypt",
+    "pycrypto": "pycryptodome",
+    "sklearn": "scikit-learn",
+    "yaml": "PyYAML"
+  },
+  "removed": [
+    "argparse",
+    "distribute",
+    "enum34",
+    "functools32",
+    "futures",
+    "importlib",
+    "ordereddict",
+    "pathlib",
+    "subprocess32",
+    "typing",
+    "unittest2",
+    "wsgiref"
+  ],
+  "bad_pins": {
+    "django": {"below": "4.1.3", "replacement": ">=4.1.3,<5"},
+    "lxml": {"below": "4.9.2", "replacement": ">=4.9.2"},
+    "matplotlib": {"below": "3.6.0", "replacement": ">=3.6.0"},
+    "numpy": {"below": "1.23.2", "replacement": ">=1.23.2"},
+    "pandas": {"below": "1.5.0", "replacement": ">=1.5.0"},
+    "pillow": {"below": "9.3.0", "replacement": ">=9.3.0"},
+    "psycopg2": {"below": "2.9.5", "replacement": ">=2.9.5"},
+    "scipy": {"below": "1.9.2", "replacement": ">=1.9.2"}
+  },
+  "import_names": {
+    "bs4": "beautifulsoup4",
+    "cv2": "opencv-python",
+    "dateutil": "python-dateutil",
+    "django": "django",
+    "flask": "flask",
+    "jinja2": "jinja2",
+    "lxml": "lxml",
+    "matplotlib": "matplotlib",
+    "MySQLdb": "mysqlclient",
+    "numpy": "numpy",
+    "pandas": "pandas",
+    "PIL": "pillow",
+    "psycopg2": "psycopg2",
+    "pytest": "pytest",
+    "requests": "requests",
+    "scipy": "scipy",
+    "six": "six",
+    "sklearn": "scikit-learn",
+    "yaml": "pyyaml"
+  }
+}

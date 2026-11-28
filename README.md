@@ -12,12 +12,12 @@ There are no LLM calls, and the engine makes no network calls. Only `prove` runs
 
 ## Status
 
-Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command (Stage 2) are implemented (see [docs/STAGE2.md](docs/STAGE2.md)). See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
+Stage 1 (backend engine, CLI and two broken sample repositories) is complete and tested. The dashboard and `serve` command (Stage 2) are implemented (see [docs/STAGE2.md](docs/STAGE2.md)). The opt-in Node.js `package.json` modernizer (Stage 4, `--node`) is implemented (see [docs/STAGE4.md](docs/STAGE4.md)). See [docs/STAGE1.md](docs/STAGE1.md) for components, limitations and exact commands, and [docs/STAGE1_EVIDENCE.md](docs/STAGE1_EVIDENCE.md) for captured run output.
 
 ## Scope
 
 - v1: Python repos (Python 2 to 3 syntax, outdated imports, broken `requirements.txt`). Requires Python 3.11.
-- Stretch: Node.js `package.json` manifest modernization.
+- Stretch (implemented, opt-in with `--node`): Node.js `package.json` manifest modernization. JavaScript sources are never rewritten.
 - The hosted demo runs only the bundled `samples/`. Uploaded-repo mode is local only.
 
 ## License
@@ -59,12 +59,14 @@ Open the URL, pick a sample, press Scan, then Resurrect. See [docs/STAGE2.md](do
 ## CLI (Stage 1)
 
 ```
-python -m grimoire autopsy PATH [--json]
-python -m grimoire revive PATH [--output DIR] [--json]
-python -m grimoire prove PATH [--output DIR] [--wheelhouse DIR] [--timeout SECONDS] [--json]
+python -m grimoire autopsy PATH [--node] [--json]
+python -m grimoire revive PATH [--node] [--output DIR] [--json]
+python -m grimoire prove PATH [--node] [--output DIR] [--wheelhouse DIR] [--timeout SECONDS] [--json]
 ```
 
 `revive` repairs an isolated temporary copy and never modifies PATH. With `--output DIR` (a new or empty directory outside PATH) the revived copy is written there, with originals of changed files under `.grimoire-backup/` and a generated `Dockerfile.grimoire`. `prove` also runs the entry point in a temporary virtual environment, installing dependencies only from a local `--wheelhouse` (`pip --no-index`). Dependencies that cannot be installed offline give `UNVERIFIED`.
+
+`--node` also analyzes and repairs `package.json` manifests from an offline table (no npm, no network). Without it a `package.json` is reported as `UNSUPPORTED_MANIFEST` and not checked.
 
 Exit codes: 0 ALIVE (or no remaining findings), 1 STILL_DEAD or TIMED_OUT, 2 UNVERIFIED, 3 internal or usage error.
 

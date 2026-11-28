@@ -11,7 +11,7 @@ import sys
 import tomllib
 from pathlib import PurePosixPath
 
-from . import codemods, imports, py2parse, requirements, scan
+from . import codemods, imports, nodejs, py2parse, requirements, scan
 from .models import (
     DEATH_CATEGORIES,
     Finding,
@@ -214,8 +214,12 @@ def _import_findings(
 # --------------------------------------------------------------------------- main entry
 
 
-def autopsy(root: str | os.PathLike[str]) -> Report:
-    """Diagnose a repository. Pure analysis: nothing is written."""
+def autopsy(root: str | os.PathLike[str], *, node: bool = False) -> Report:
+    """Diagnose a repository. Pure analysis: nothing is written.
+
+    ``node`` enables package.json analysis (spec task 29); without it a package.json is
+    reported as UNSUPPORTED_MANIFEST and nothing in it is checked.
+    """
     root_str = os.fspath(root)
     scanned = scan.scan_repo(root_str)
     findings: list[Finding] = list(scanned.findings)
@@ -244,9 +248,22 @@ def autopsy(root: str | os.PathLike[str]) -> Report:
         declared |= names
         findings.extend(manifest_findings)
     for path in scanned.paths("node-manifest"):
-        findings.append(
-            make_finding("UNSUPPORTED_MANIFEST", path, 0, "package.json detected; Node.js analysis is not supported, nothing was checked")
-        )
+        if not node:
+            findings.append(
+                make_finding(
+                    "UNSUPPORTED_MANIFEST",
+                    path,
+                    0,
+                    "package.json detected; Node.js analysis is not enabled, nothing was checked",
+                )
+            )
+            continue
+        src, err = scan.read_source(root_str, path)
+        if err:
+            findings.append(err)
+            continue
+        _fixed, node_findings = nodejs.fix_manifest(src.text, path)
+        findings.extend(node_findings)
 
     sources: dict[str, scan.SourceFile] = {}
     for path in scanned.paths("python"):
@@ -288,7 +305,7 @@ def autopsy(root: str | os.PathLike[str]) -> Report:
     # one MISSING_DEPENDENCY per distribution: keep the first occurrence only
     findings = _dedupe_missing(findings)
     final = sorted_findings(findings)
-    coverage = _coverage(scanned)
+    coverage = _coverage(scanned, node)
     return Report(
         findings=final,
         cause_of_death=cause_of_death(final),
@@ -327,14 +344,14 @@ def _unsupported_findings(scanned: scan.ScanResult) -> list[Finding]:
     return findings
 
 
-def _coverage(scanned: scan.ScanResult) -> tuple[tuple[str, str, int], ...]:
+def _coverage(scanned: scan.ScanResult, node: bool = False) -> tuple[tuple[str, str, int], ...]:
     rows = [
         (lang, "ANALYZED" if lang in scan.ANALYZED_LANGUAGES else "UNSUPPORTED", count)
         for lang, count in scanned.languages
     ]
     node_manifests = len(scanned.paths("node-manifest"))
     if node_manifests:
-        rows.append(("package.json", "UNSUPPORTED", node_manifests))
+        rows.append(("package.json", "ANALYZED" if node else "UNSUPPORTED", node_manifests))
     return tuple(sorted(rows))
 
 

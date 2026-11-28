@@ -14,7 +14,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from . import autopsy as autopsy_mod
-from . import codemods, diffing, dockerfile, requirements, scan, verify
+from . import codemods, diffing, dockerfile, nodejs, requirements, scan, verify
 from .models import FilePatch, Finding, Report, make_finding, sorted_findings
 
 BACKUP_DIR = ".grimoire-backup"
@@ -48,7 +48,7 @@ def _write(root: str, rel: str, text: str, encoding: str, originals: dict[str, b
 
 
 def _repair(
-    work: str, before: tuple[Finding, ...], originals: dict[str, bytes]
+    work: str, before: tuple[Finding, ...], originals: dict[str, bytes], node: bool = False
 ) -> tuple[list[FilePatch], list[Finding]]:
     """Apply every automatic repair to the working copy. Returns patches and rejection findings."""
     scanned = scan.scan_repo(work)
@@ -91,20 +91,48 @@ def _repair(
         if text != src.text:
             _write(work, path, text, src.encoding, originals)
             patches.append(FilePatch(path, src.text, text, ("REQUIREMENTS",)))
+
+    if node:
+        for path in scanned.paths("node-manifest"):
+            src, err = scan.read_source(work, path)
+            if src is None:
+                continue
+            text, node_findings = nodejs.fix_manifest(src.text, path)
+            if text != src.text:
+                rules = tuple(sorted({f.rule_id for f in node_findings if f.repair_class == "AUTOMATIC"}))
+                _write(work, path, text, src.encoding, originals)
+                patches.append(FilePatch(path, src.text, text, rules))
     return patches, rejected
 
 
-def _validate(work: str, after: Report) -> tuple[tuple[str, str, str], ...]:
+def _manifest_failures(work: str) -> list[str]:
+    failures: list[str] = []
+    for path in scan.scan_repo(work).paths("node-manifest"):
+        src, err = scan.read_source(work, path)
+        if src is None:
+            failures.append(f"{path}: {err.reason if err else 'unreadable'}")
+            continue
+        _data, error = nodejs.parse_manifest(src.text)
+        if error:
+            failures.append(f"{path}: {error}")
+    return failures
+
+
+def _validate(work: str, after: Report, node: bool = False) -> tuple[tuple[str, str, str], ...]:
     failures = verify.compile_check(work)
     remaining = [f for f in after.findings if f.severity != "INFO"]
-    return (
-        ("all Python files parse", "FAIL" if failures else "PASS", "; ".join(failures)),
+    rows = [("all Python files parse", "FAIL" if failures else "PASS", "; ".join(failures))]
+    if node:
+        bad = _manifest_failures(work)
+        rows.append(("all package.json files parse", "FAIL" if bad else "PASS", "; ".join(bad)))
+    rows.append(
         (
             "no unresolved findings",
             "FAIL" if remaining else "PASS",
             f"{len(remaining)} finding(s) remain" if remaining else "",
-        ),
+        )
     )
+    return tuple(rows)
 
 
 def _persist(work: str, output: str, originals: dict[str, bytes], dockerfile_text: str) -> None:
@@ -135,6 +163,7 @@ def revive(
     output: str | os.PathLike[str] | None = None,
     *,
     prove: bool = False,
+    node: bool = False,
     wheelhouse: str | os.PathLike[str] | None = None,
     timeout: float = verify.DEFAULT_TIMEOUT,
     on_event: Callable[[str, str, str], None] | None = None,
@@ -143,6 +172,7 @@ def revive(
     """Repair a repository in an isolated copy and report before and after.
 
     Raises OutputError when ``output`` is unsafe. Everything else becomes a Finding.
+    ``node`` also analyzes and repairs package.json manifests (never JavaScript sources).
     ``on_event(stage, status, message)`` and ``on_line(line)`` are optional observers
     (status is "start" or "done"); they never change the result.
     """
@@ -154,7 +184,7 @@ def revive(
     out_path = _check_output(source, os.fspath(output)) if output is not None else None
 
     emit("autopsy", "start", "diagnosing the repository")
-    before = autopsy_mod.autopsy(source)
+    before = autopsy_mod.autopsy(source, node=node)
     emit("autopsy", "done", f"{len(before.findings)} finding(s)")
     if any(f.rule_id == "INVALID_REPO" for f in before.findings):
         return before
@@ -167,14 +197,14 @@ def revive(
         emit("copy", "done", "working copy ready")
         originals: dict[str, bytes] = {}
         emit("repair", "start", "applying automatic repairs")
-        patches, rejected = _repair(work, before.findings, originals)
+        patches, rejected = _repair(work, before.findings, originals, node)
         emit("repair", "done", f"{len(patches)} file(s) patched")
         emit("reanalyze", "start", "re-running analysis on the repaired copy")
-        after = autopsy_mod.autopsy(work)
+        after = autopsy_mod.autopsy(work, node=node)
         findings = sorted_findings(list(after.findings) + rejected)
         emit("reanalyze", "done", f"{len(findings)} finding(s) remain")
         emit("validate", "start", "validating the repaired copy")
-        validation = _validate(work, after)
+        validation = _validate(work, after, node)
         emit("validate", "done", ", ".join(f"{n}: {s}" for n, s, _d in validation))
         emit("dockerfile", "start", "generating Dockerfile")
         entry = dockerfile.detect_entry(work)

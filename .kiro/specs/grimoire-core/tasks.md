@@ -123,7 +123,7 @@ Ordered smallest first. Each task is done when its acceptance criteria hold and 
   - Document install, CLI, hosted vs local mode, and the Python 3.11 / lib2to3 constraint.
   - Acceptance: following the README from a clean checkout reaches an ALIVE result on a sample.
 
-- [ ] 29. (Stretch) Node manifest modernizer
+- [x] 29. (Stretch) Node manifest modernizer
   - `nodejs.py` and `data/node_map.json`; a small `package.json` sample fixture under `tests/fixtures/`.
   - Acceptance: deprecated packages replaced, key order preserved, no JS files touched, no npm calls. (Req 10)
   - [PBT] Idempotent; output is valid JSON; key order of untouched keys preserved.

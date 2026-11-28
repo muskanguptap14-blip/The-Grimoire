@@ -18,6 +18,7 @@ from . import verify
 from .models import Report
 
 EXIT_OK, EXIT_DEAD, EXIT_UNVERIFIED, EXIT_ERROR = 0, 1, 2, 3
+NODE_HELP = "also analyze and repair package.json manifests (offline, no npm, JavaScript sources untouched)"
 
 
 def format_revive(report: Report) -> str:
@@ -60,10 +61,12 @@ def _build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("autopsy", help="diagnose a repository (read only)")
     p.add_argument("repo")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--node", action="store_true", help=NODE_HELP)
     for name, helptext in (("revive", "repair an isolated copy and report"), ("prove", "revive, then run the result offline")):
         p = sub.add_parser(name, help=helptext)
         p.add_argument("repo")
         p.add_argument("--json", action="store_true")
+        p.add_argument("--node", action="store_true", help=NODE_HELP)
         p.add_argument("--output", "--apply", dest="output", metavar="DIR", help="write the revived copy to a new directory outside the repo")
         if name == "prove":
             p.add_argument("--wheelhouse", help="directory of wheels for offline installs")
@@ -102,13 +105,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
         if args.command == "autopsy":
-            report = autopsy_mod.autopsy(args.repo)
+            report = autopsy_mod.autopsy(args.repo, node=args.node)
             sys.stdout.write(autopsy_mod.report_json(report) if args.json else autopsy_mod.format_report(report))
             return EXIT_ERROR if any(f.rule_id == "INVALID_REPO" for f in report.findings) else EXIT_OK
         report = revive_mod.revive(
             args.repo,
             args.output,
             prove=args.command == "prove",
+            node=args.node,
             wheelhouse=getattr(args, "wheelhouse", None),
             timeout=getattr(args, "timeout", verify.DEFAULT_TIMEOUT),
         )

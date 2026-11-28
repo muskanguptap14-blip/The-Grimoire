@@ -1,0 +1,23 @@
+{
+  "renames": {
+    "coffee-script": {"new": "coffeescript", "range": "^2.7.0"},
+    "jade": {"new": "pug", "range": "^3.0.2"},
+    "node-uuid": {"new": "uuid", "range": "^9.0.1"}
+  },
+  "deprecated": {
+    "gulp-util": "deprecated upstream; use the individual modules it was split into",
+    "istanbul": "deprecated upstream; use nyc",
+    "left-pad": "deprecated upstream; use String.prototype.padStart",
+    "node-sass": "deprecated upstream; use sass",
+    "request": "deprecated upstream with no drop-in replacement; use fetch or undici",
+    "request-promise": "deprecated upstream with no drop-in replacement; use fetch or undici",
+    "request-promise-native": "deprecated upstream with no drop-in replacement; use fetch or undici",
+    "tslint": "deprecated upstream; use ESLint with typescript-eslint",
+    "uglify-es": "deprecated upstream; use terser"
+  },
+  "bad_ranges": {
+    "fsevents": {"below": "2.0.0", "replacement": "^2.3.2"},
+    "lodash": {"below": "4.17.21", "replacement": "^4.17.21"}
+  },
+  "engines_node": {"below": "18.0.0", "replacement": ">=18"}
+}
